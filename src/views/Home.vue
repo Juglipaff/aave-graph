@@ -53,7 +53,7 @@ export default {
         const dateNormalised = toDateTime(point.x)
         this.price.push({ x: dateNormalised, y: point.y })
         if (point.closedPortal) {
-          this.colorArray.push('rgba(0,0,0,0)')
+          this.colorArray.push('rgba(0,0,0,255)')
         } else {
           this.colorArray.push('rgba(191,158,252,255)')
         }
