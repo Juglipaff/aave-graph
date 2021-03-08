@@ -16,12 +16,11 @@ async function main () {
   const results = await diamond.queryFilter(filter, from - 900)
   var arr = []
   for (var i = 0; i < results.length; i++) {
-    var closedPortal = false
-    if (results[i].args.category._hex === '0x00') {
-    //  arr.push({ y: parseInt(results[i].args.priceInWei._hex, 16) / 1000000000000000000, x: parseInt(results[i].args.time._hex, 16) })
-      closedPortal = true
-    }
-    arr.push({ y: parseInt(results[i].args.priceInWei._hex, 16) / 1000000000000000000, x: parseInt(results[i].args.time._hex, 16), closedPortal: closedPortal })
+    // console.log(results[i].args)
+    var category = '0'
+    category = parseInt(results[i].args.category._hex, 16)
+    const rarity = category === 3 ? parseInt((await diamond.getAavegotchi(parseInt(results[i].args.erc721TokenId._hex, 16))).modifiedRarityScore._hex, 16) : 0
+    arr.push({ y: parseInt(results[i].args.priceInWei._hex, 16) / 1000000000000000000, x: parseInt(results[i].args.time._hex, 16), category: category, rarity: rarity })
   }
 
   return arr
