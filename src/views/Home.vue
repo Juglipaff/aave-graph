@@ -157,7 +157,7 @@ export default {
               gridLines: {
                 display: true
               },
-              offset: true
+              offset: false
             }
           ]
         },
