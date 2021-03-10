@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Gotchi from '../views/Gotchi.vue'
 import Portals from '../views/Portals.vue'
+import Bazaar from '../views/Bazaar.vue'
 
 Vue.use(VueRouter)
 
@@ -15,6 +16,11 @@ const routes = [
     path: '/closed-portals',
     name: 'Portals',
     component: Portals
+  },
+  {
+    path: '/bazaar',
+    name: 'Bazaar',
+    component: Bazaar
   },
   {
     path: '*',

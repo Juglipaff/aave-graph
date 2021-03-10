@@ -30,16 +30,32 @@ async function gotchiPrices (isGotchi) {
   return dataArray
 }
 
+async function getBazzarItems () {
+  const aavegotchiDiamondAddress = '0x86935F11C86623deC8a25696E1C19a8659CbF95d'
+  const provider = new ethers.providers.JsonRpcProvider('https://rpc-mainnet.matic.network/')
+  const diamond = new ethers.Contract(aavegotchiDiamondAddress, abi, provider)
+  const listingInfo = await diamond.getERC721Listings(0, 'listed', 1000)
+  var listings = []
+  for (let i = 0; i < listingInfo.length; i++) {
+    listings.push({ link: `https:aavegotchi.com/baazaar/erc721/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001 })
+  }
+  return listings
+}
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
     graphs: [],
+    listings: [],
     errors: []
   },
   mutations: {
     SET_GRAPHS (state, graphData) {
       state.graphs = graphData
+      state.errors = []
+    },
+    SET_LISTINGS (state, listingData) {
+      state.listings = listingData
       state.errors = []
     },
     SET_ERRORS (state, errorData) {
@@ -50,6 +66,14 @@ export default new Vuex.Store({
     fetchGraph ({ commit }, isGotchi) {
       return gotchiPrices(isGotchi).then(response => {
         commit('SET_GRAPHS', response)
+      }).catch(error => {
+        commit('SET_ERRORS', error)
+        throw error
+      })
+    },
+    updateListing ({ commit }) {
+      return getBazzarItems().then(response => {
+        commit('SET_LISTINGS', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
         throw error

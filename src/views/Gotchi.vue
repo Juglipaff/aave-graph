@@ -40,7 +40,7 @@ function lerpColor (a, b, amount) {
 export default {
   store,
   components: { Chart },
-  name: 'Home',
+  name: 'Gotchi',
   computed: {
     ...mapState({
       graphs: 'graphs',
@@ -59,6 +59,7 @@ export default {
   created () {
     var price = 0
     var maxPrice = 0
+
     this.$Progress.start()
     axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
       .then(function (response) {
@@ -75,6 +76,7 @@ export default {
             if (point.y > maxPrice) {
               maxPrice = parseInt(point.y)
             }
+
             rarityArray.push(point.rarity)
             this.colorArray.push(`${lerpColor('#100000', '#ff0000', Math.min(Math.max((-1800 + point.rarity * 4.5) / 1000), 1), 0)}`)
             this.priceForGotchi.push({ x: dateNormalised, y: point.y })
@@ -90,7 +92,7 @@ export default {
               fill: true,
               borderColor: this.colorArray,
               backgroundColor: 'rgba(255, 0, 0, 255)',
-              borderWidth: 5,
+              borderWidth: 4,
               type: 'scatter',
               yAxisID: 'left-y-axis',
               id: 'gotchi'
@@ -104,7 +106,8 @@ export default {
                 type: 'logarithmic',
                 id: 'left-y-axis',
                 ticks: {
-
+                  min: 0,
+                  beginAtZero: true,
                   max: maxPrice,
                   callback: function (value) {
                     return value + ' ' + 'GHST'
@@ -162,7 +165,7 @@ export default {
           },
           elements: {
             point: {
-              radius: 3
+              radius: 2
             }
           },
           tooltips: {

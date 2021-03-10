@@ -24,7 +24,7 @@ function toDateTime (secs) {
 export default {
   store,
   components: { Chart },
-  name: 'Home',
+  name: 'Portals',
   computed: {
     ...mapState({
       graphs: 'graphs',
@@ -45,6 +45,7 @@ export default {
   created () {
     var price = 0
     var maxPrice = 0
+
     this.$Progress.start()
     axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
       .then(function (response) {
@@ -71,7 +72,7 @@ export default {
             data: this.priceForClosedPortals,
             fill: false,
             borderColor: '#0088cc',
-            borderWidth: 7,
+            borderWidth: 4,
             type: 'scatter',
             yAxisID: 'left-y-axis',
             id: 'closedportal'
