@@ -1,19 +1,25 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
+import Gotchi from '../views/Gotchi.vue'
+import Portals from '../views/Portals.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
   {
     path: '/',
-    name: 'Home',
-    component: Home
+    name: 'Gotchi',
+    component: Gotchi
+  },
+  {
+    path: '/closed-portals',
+    name: 'Portals',
+    component: Portals
   },
   {
     path: '*',
     name: 'catchAll',
-    component: Home
+    component: Gotchi
   }
 ]
 

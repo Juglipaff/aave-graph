@@ -1,8 +1,10 @@
 <template>
   <div id="app">
     <div id="nav">
-      <router-link to="/"></router-link>
+      <router-link to="/">Gotchi prices </router-link> ||
+      <router-link to="/closed-portals">Closed Portals prices</router-link>
     </div>
+    <vue-progress-bar></vue-progress-bar>
     <router-view/>
   </div>
 </template>
@@ -27,5 +29,8 @@
 
 #nav a.router-link-exact-active {
   color: #42b983;
+}
+#chart{
+  width:98%
 }
 </style>

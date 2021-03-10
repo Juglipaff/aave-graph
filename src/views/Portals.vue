@@ -1,6 +1,10 @@
 <template>
   <div>
-    <chart v-bind:chartData="chartData" v-bind:options="options"/>
+    <div v-if="errors.length!==0">
+      OOPS... Something went wrong... <br>
+      You've probably sent way too many requests to the provider...
+    </div>
+    <chart v-bind:chartData="chartData" v-bind:options="options" id="chart"/>
   </div>
 </template>
 <script>
@@ -10,29 +14,11 @@ import store from '../store/index.js'
 import Chart from '../components/Chart.vue'
 import axios from 'axios'
 
-var rarityArray = []
 function toDateTime (secs) {
   const t = new Date(1970, 0, 1)
   secs -= t.getTimezoneOffset() * 60
-
   t.setSeconds(secs)
   return t
-}
-
-function lerpColor (a, b, amount) {
-  var ah = +a.replace('#', '0x')
-  var ar = ah >> 16
-  var ag = ah >> 8 & 0xff
-  var ab = ah & 0xff
-  var bh = +b.replace('#', '0x')
-  var br = bh >> 16
-  var bg = bh >> 8 & 0xff
-  var bb = bh & 0xff
-  var rr = ar + amount * (br - ar)
-  var rg = ag + amount * (bg - ag)
-  var rb = ab + amount * (bb - ab)
-
-  return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + rb | 0).toString(16).slice(1)
 }
 
 export default {
@@ -41,7 +27,8 @@ export default {
   name: 'Home',
   computed: {
     ...mapState({
-      graphs: 'graphs'
+      graphs: 'graphs',
+      errors: 'errors'
     })
   },
   data () {
@@ -52,57 +39,38 @@ export default {
       },
       options: {
       },
-      priceForGotchi: [],
-      priceForClosedPortals: [],
-      colorArray: []
+      priceForClosedPortals: []
     }
   },
   created () {
     var price = 0
     var maxPrice = 0
+    this.$Progress.start()
     axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
       .then(function (response) {
-        // handle success
         price = parseFloat(response.data.aavegotchi.usd)
       })
       .catch(function (error) {
         console.log(error)
       })
-    this.$store.dispatch('fetchGraph').then(() => {
+    this.$store.dispatch('fetchGraph', { isGotchi: false }).then(() => {
       this.graphs.forEach(point => {
-        const dateNormalised = toDateTime(point.x)
-        if (point.y > maxPrice) {
-          maxPrice = point.y
-        }
-        if (point.category === 3) {
-          rarityArray.push(point.rarity)
-          this.colorArray.push(`${lerpColor('#100000', '#ff0000', Math.min(Math.max((-1800 + point.rarity * 4.5) / 1000), 1), 0)}`)
-          this.priceForGotchi.push({ x: dateNormalised, y: point.y })
-        } else if (point.category === 0) {
+        if (point.category === 0) {
+          const dateNormalised = toDateTime(point.x)
           this.priceForClosedPortals.push({ x: dateNormalised, y: point.y })
+          if (point.y > maxPrice) {
+            maxPrice = parseInt(point.y)
+          }
         }
       })
-
       this.chartData = {
         type: 'scatter',
         datasets: [
-          {
-            label: 'Price For Gotchi',
-            data: this.priceForGotchi,
-            fill: true,
-            borderColor: this.colorArray, // 'rgba(191, 158, 252, 255)',
-            backgroundColor: 'rgba(255, 0, 0, 255)',
-            borderWidth: 5,
-            type: 'scatter',
-            yAxisID: 'left-y-axis',
-            id: 'gotchi'
-          },
           {
             label: 'Price For Closed Portals',
             data: this.priceForClosedPortals,
             fill: false,
             borderColor: '#0088cc',
-
             borderWidth: 7,
             type: 'scatter',
             yAxisID: 'left-y-axis',
@@ -114,32 +82,46 @@ export default {
         scales: {
           yAxes: [
             {
+              type: 'logarithmic',
               id: 'left-y-axis',
               ticks: {
-                beginAtZero: true,
+
+                max: maxPrice,
                 callback: function (value) {
                   return value + ' ' + 'GHST'
                 }
               },
+              afterBuildTicks: (chartObj) => {
+                const ticks = [0, 5, 10, 50, 100, 500, 1000, 5000, 10000, 50000]
+                chartObj.ticks = ticks
+              },
               gridLines: {
                 display: true
-              }
-            },
+              },
+              offset: false
+            }/*,
             {
+              type: 'logarithmic',
               id: 'right-y-axis',
               ticks: {
                 beginAtZero: true,
-                suggestedMax: price * maxPrice,
+                min: 0,
+                max: price * maxPrice,
                 callback: function (value) {
                   return '$' + value
                 }
               },
-              gridLines: {
-                display: false
+              afterBuildTicks: (chartObj) => {
+                const ticks = [0, 5, 10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000]
+                chartObj.ticks = ticks
               },
-              position: 'right'
+              gridLines: {
+                display: true
+              },
+              position: 'right',
+              offset: false
 
-            }
+            } */
 
           ],
           xAxes: [
@@ -163,16 +145,11 @@ export default {
         },
 
         legend: {
-
-          labels: {
-
-          },
           display: true
-
         },
         elements: {
           point: {
-            radius: 3
+            radius: 2
           }
         },
         tooltips: {
@@ -183,29 +160,31 @@ export default {
               const label = tooltipItem.xLabel
               return label
             },
-            afterLabel: function (tooltipItem, data) {
+            afterLabel: function (tooltipItem) {
               const label = ['NFT price: ',
-                tooltipItem.yLabel + ' GHST',
-                '$' + parseInt(tooltipItem.yLabel * price),
-                'Rarity: ' + rarityArray[tooltipItem.index]
+                parseInt(tooltipItem.yLabel) + ' GHST',
+                '$' + parseInt(tooltipItem.yLabel * price)
               ]
-              if (data.datasets[tooltipItem.datasetIndex].id === 'closedportal') {
-                label.splice(-1, 1)
-              }
               return label
             }
           }
         },
+        animation: {
+          duration: 0 // general animation time
+        },
         hover:
         {
           mode: 'nearest',
-          intersect: false
+          intersect: false,
+          animationDuration: 0
         },
         responsive: true,
+        responsiveAnimationDuration: 0,
         maintainAspectRatio: false
       }
+      this.$Progress.finish()
     })
+      .catch(error => { console.log(error); this.$Progress.finish() })
   }
-
 }
 </script>
