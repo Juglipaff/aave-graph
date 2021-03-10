@@ -76,7 +76,7 @@ export default {
         }
         if (point.category === 3) {
           rarityArray.push(point.rarity)
-          this.colorArray.push(`${lerpColor('#100000', '#ff0000', Math.min(Math.max((-2000 + point.rarity * 5) / 1000), 1), 0)}`)
+          this.colorArray.push(`${lerpColor('#100000', '#ff0000', Math.min(Math.max((-1800 + point.rarity * 4.5) / 1000), 1), 0)}`)
           this.priceForGotchi.push({ x: dateNormalised, y: point.y })
         } else if (point.category === 0) {
           this.priceForClosedPortals.push({ x: dateNormalised, y: point.y })
@@ -101,7 +101,7 @@ export default {
             label: 'Price For Closed Portals',
             data: this.priceForClosedPortals,
             fill: false,
-            borderColor: 'rgba(0, 0, 255, 255)',
+            borderColor: '#0088cc',
 
             borderWidth: 7,
             type: 'scatter',
@@ -146,8 +146,9 @@ export default {
             {
               type: 'time',
               time: {
+                unit: 'day',
                 displayFormats: {
-                  second: 'h:mm:ss a'
+                  day: 'MMM DD'
                 }
               },
               ticks: {
@@ -162,12 +163,9 @@ export default {
         },
 
         legend: {
-          maxWidth: 40,
-          maxHeight: 40,
+
           labels: {
-            color: 'rgb(255, 0, 0)',
-            boxHeight: 40,
-            boxWidth: 40
+
           },
           display: true
 
@@ -189,7 +187,7 @@ export default {
               const label = ['NFT price: ',
                 tooltipItem.yLabel + ' GHST',
                 '$' + parseInt(tooltipItem.yLabel * price),
-                'rarity: ' + rarityArray[tooltipItem.index]
+                'Rarity: ' + rarityArray[tooltipItem.index]
               ]
               if (data.datasets[tooltipItem.datasetIndex].id === 'closedportal') {
                 label.splice(-1, 1)
