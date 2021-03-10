@@ -1,6 +1,6 @@
 <template>
     <div>
-  <a v-for="listing in listings" :key="listing.link" :href="listing.link">
+  <a v-for="listing in listings" :key="listing.link" target="_blank" :href="listing.link">
    {{parseInt(listing.price)}} GOTCHI <br>
   </a>
     </div>

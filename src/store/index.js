@@ -37,7 +37,7 @@ async function getBazzarItems () {
   const listingInfo = await diamond.getERC721Listings(0, 'listed', 1000)
   var listings = []
   for (let i = 0; i < listingInfo.length; i++) {
-    listings.push({ link: `https:aavegotchi.com/baazaar/erc721/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001 })
+    listings.push({ link: `https://aavegotchi.com/baazaar/erc721/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001 })
   }
   return listings
 }
