@@ -56,7 +56,6 @@ export default {
       chartData: {},
       options: {},
       priceForGotchi: [],
-      priceForClosedPortals: [],
       colorArray: [],
       blocksShown: 100
     }
@@ -65,6 +64,9 @@ export default {
     updateGraph () {
       var price = 0
       var maxPrice = 0
+      this.priceForGotchi = []
+      rarityArray = []
+      this.colorArray = []
       this.$Progress.start()
       axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
         .then(function (response) {

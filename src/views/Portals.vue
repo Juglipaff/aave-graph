@@ -51,6 +51,7 @@ export default {
     updateGraph () {
       var price = 0
       var maxPrice = 0
+      this.priceForClosedPortals = []
       this.$Progress.start()
       axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
         .then(function (response) {
