@@ -6,7 +6,7 @@
     {{blocksShown}}  <br>
 
     Points shown:
-    10 <input v-model="blocksShown" type="range" min="10" max="800"> 800
+    10 <input v-model="blocksShown" type="range" min="10" max="1500"> 1500
     <button v-on:click="updateGraph">Update</button>
     <div v-if="errors.length!==0">
       OOPS... Something went wrong... <br>
@@ -52,7 +52,7 @@ export default {
   name: 'Gotchi',
   computed: {
     ...mapState({
-      graphs: 'graphs',
+      openPortalGraphs: 'openPortalGraphs',
       errors: 'errors'
     })
   },
@@ -72,7 +72,7 @@ export default {
         'rgba(100, 230, 230, 255)'
       ],
       prices: [],
-      blocksShown: 100,
+      blocksShown: 500,
       rarityLow: 0,
       rarityHigh: 0,
       currentPrice: 0,
@@ -104,37 +104,39 @@ export default {
           console.log(error)
         })
 
-      await this.$store.dispatch('fetchGraph', { blocksShown: this.blocksShown })
+      await this.$store.dispatch('fetchOpenPortalGraph', { blocksShown: this.blocksShown })
         .then(() => {
-          for (var i = 0; i < this.graphs.length; i++) {
-            if (this.graphs[i].y > this.maxPrice) {
-              this.maxPrice = parseInt(this.graphs[i].y)
-            }
-            // this.colorArray.push(`${lerpColor('#100000', '#ff0000', Math.min(Math.max((-1800 + this.graphs[i].rarity * 4.5) / 1000), 1), 0)}`)
-            const day = Math.floor(this.graphs[i].x / 86400) * 86400
-            const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-
-            // this.priceForGotchi.push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice) })
-            if (!this.isRarityTurnedOn) {
-              if (this.graphs[i].rarity < 350) {
-                this.priceForGotchisArrays[0].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
-              } else if (this.graphs[i].rarity < 410) {
-                this.priceForGotchisArrays[1].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
-              } else if (this.graphs[i].rarity < 470) {
-                this.priceForGotchisArrays[2].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
-              } else if (this.graphs[i].rarity < 530) {
-                this.priceForGotchisArrays[3].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
-              } else if (this.graphs[i].rarity < 590) {
-                this.priceForGotchisArrays[4].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
-              } else if (this.graphs[i].rarity < 650) {
-                this.priceForGotchisArrays[5].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
-              } else {
-                this.priceForGotchisArrays[6].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
+          for (var i = 0; i < this.openPortalGraphs.length; i++) {
+            if (this.openPortalGraphs[i].rarity !== undefined) {
+              if (this.openPortalGraphs[i].y > this.maxPrice) {
+                this.maxPrice = parseInt(this.openPortalGraphs[i].y)
               }
-              continue
-            }
-            if (this.graphs[i].rarity <= this.rarityHigh && this.graphs[i].rarity >= this.rarityLow) {
-              this.priceForGotchisArrays[0].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
+
+              // this.colorArray.push(`${lerpColor('#100000', '#ff0000', Math.min(Math.max((-1800 + this.graphs[i].rarity * 4.5) / 1000), 1), 0)}`)
+              const day = Math.floor(this.openPortalGraphs[i].x / 86400) * 86400
+              const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
+              // this.priceForGotchi.push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice) })
+              if (!this.isRarityTurnedOn) {
+                if (this.openPortalGraphs[i].rarity < 350) {
+                  this.priceForGotchisArrays[0].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
+                } else if (this.openPortalGraphs[i].rarity < 410) {
+                  this.priceForGotchisArrays[1].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
+                } else if (this.openPortalGraphs[i].rarity < 470) {
+                  this.priceForGotchisArrays[2].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
+                } else if (this.openPortalGraphs[i].rarity < 530) {
+                  this.priceForGotchisArrays[3].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
+                } else if (this.openPortalGraphs[i].rarity < 590) {
+                  this.priceForGotchisArrays[4].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
+                } else if (this.openPortalGraphs[i].rarity < 650) {
+                  this.priceForGotchisArrays[5].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
+                } else {
+                  this.priceForGotchisArrays[6].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
+                }
+                continue
+              }
+              if (this.openPortalGraphs[i].rarity <= this.rarityHigh && this.openPortalGraphs[i].rarity >= this.rarityLow) {
+                this.priceForGotchisArrays[0].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
+              }
             }
           }
 

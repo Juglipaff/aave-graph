@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Gotchi from '../views/Gotchi.vue'
 import Portals from '../views/Portals.vue'
 import Bazaar from '../views/Bazaar.vue'
+import OpenPortals from '../views/OpenPortals.vue'
 
 Vue.use(VueRouter)
 
@@ -21,6 +22,11 @@ const routes = [
     path: '/bazaar',
     name: 'Bazaar',
     component: Bazaar
+  },
+  {
+    path: '/opened-portals',
+    name: 'OpenPortals',
+    component: OpenPortals
   },
   {
     path: '*',

@@ -3,7 +3,8 @@
     <div id="nav">
       <router-link to="/">Gotchi prices </router-link> ||
       <router-link to="/closed-portals">Closed Portals prices </router-link> ||
-      <router-link to="/bazaar">Bazaar</router-link>
+      <router-link to="/bazaar">Bazaar</router-link>||
+      <router-link to="/opened-portals">Open Portals</router-link>
     </div>
     <vue-progress-bar></vue-progress-bar>
     <router-view/>

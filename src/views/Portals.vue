@@ -6,7 +6,9 @@
     <button v-on:click="updateGraph">Update</button>
     <div v-if="errors.length!==0">
       OOPS... Something went wrong... <br>
-      You've probably sent way too many requests to the provider...
+      <div v-for="error in errors" :key="error.message">
+        {{error.message}}
+      </div>
     </div>
     <chart v-bind:chartData="chartData" v-bind:options="options" id="chart"/>
   </div>
@@ -37,37 +39,42 @@ export default {
   },
   data () {
     return {
-      chartData: {
-        type: 'scatter',
-        datasets: []
-      },
-      options: {
-      },
+      chartData: {},
+      options: {},
       priceForClosedPortals: [],
-      blocksShown: 500
+      blocksShown: 500,
+      prices: [],
+      currentPrice: 0,
+      maxPrice: 0
     }
   },
   methods: {
-    updateGraph () {
-      var price = 0
-      var maxPrice = 0
+    async updateGraph () {
       this.priceForClosedPortals = []
       this.$Progress.start()
-      axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
-        .then(function (response) {
-          price = parseFloat(response.data.aavegotchi.usd)
+      await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
+        .then((response) => {
+          this.currentPrice = response.data.aavegotchi.usd
         })
-        .catch(function (error) {
+        .catch((error) => {
           console.log(error)
         })
-      this.$store.dispatch('fetchPortalGraph', { blocksShown: this.blocksShown }).then(() => {
-        this.portalGraphs.forEach(point => {
-          const dateNormalised = toDateTime(point.x)
-          this.priceForClosedPortals.push({ x: dateNormalised, y: point.y })
-          if (point.y > maxPrice) {
-            maxPrice = parseInt(point.y)
-          }
+      await axios.get('https://api.coingecko.com/api/v3/coins/aavegotchi/market_chart?vs_currency=usd&days=max&interval=daily')
+        .then((response) => {
+          this.prices = response.data.prices
         })
+        .catch((error) => {
+          console.log(error)
+        })
+      await this.$store.dispatch('fetchPortalGraph', { blocksShown: this.blocksShown }).then(() => {
+        for (var i = 0; i < this.portalGraphs.length; i++) {
+          const day = Math.floor(this.portalGraphs[i].x / 86400) * 86400
+          const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
+          this.priceForClosedPortals.push({ x: toDateTime(this.portalGraphs[i].x), y: this.portalGraphs[i].y * (price ? price[1] : this.currentPrice) })
+          if (this.portalGraphs[i].y > this.maxPrice) {
+            this.maxPrice = parseInt(this.portalGraphs[i].y)
+          }
+        }
 
         this.chartData = {
           type: 'scatter',
@@ -91,44 +98,20 @@ export default {
                 type: 'logarithmic',
                 id: 'left-y-axis',
                 ticks: {
-
-                  max: maxPrice,
-                  callback: function (value) {
-                    return value + ' ' + 'GHST'
+                  max: this.maxPrice,
+                  callback: (value) => {
+                    return '$' + value
                   }
                 },
                 afterBuildTicks: (chartObj) => {
-                  const ticks = [0, 5, 10, 50, 100, 500, 1000, 5000, 10000, 50000]
+                  const ticks = [0, 10, 50, 100, 500, 1000, 5000, 10000, 50000]
                   chartObj.ticks = ticks
                 },
                 gridLines: {
                   display: true
                 },
                 offset: false
-              }/*,
-            {
-              type: 'logarithmic',
-              id: 'right-y-axis',
-              ticks: {
-                beginAtZero: true,
-                min: 0,
-                max: price * maxPrice,
-                callback: function (value) {
-                  return '$' + value
-                }
-              },
-              afterBuildTicks: (chartObj) => {
-                const ticks = [0, 5, 10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000]
-                chartObj.ticks = ticks
-              },
-              gridLines: {
-                display: true
-              },
-              position: 'right',
-              offset: false
-
-            } */
-
+              }
             ],
             xAxes: [
               {
@@ -162,33 +145,37 @@ export default {
             mode: 'nearest',
             intersect: false,
             callbacks: {
-              label: function (tooltipItem) {
+              title: () => {
+                const label = []
+                return label
+              },
+              label: (tooltipItem) => {
                 const label = tooltipItem.xLabel
                 return label
               },
-              afterLabel: function (tooltipItem) {
+              afterLabel: (tooltipItem) => {
                 const label = ['NFT price: ',
-                  parseInt(tooltipItem.yLabel) + ' GHST',
-                  '$' + parseInt(tooltipItem.yLabel * price)
+                  '$' + parseInt(tooltipItem.yLabel),
+                  parseInt(this.portalGraphs[tooltipItem.index].y) + ' GHST'
                 ]
                 return label
               }
             }
           },
           animation: {
-            duration: 0 // general animation time
+            duration: 0
           },
           hover:
-        {
-          mode: 'nearest',
-          intersect: false,
-          animationDuration: 0
-        },
+          {
+            mode: 'nearest',
+            intersect: false,
+            animationDuration: 0
+          },
           responsive: true,
           responsiveAnimationDuration: 0,
-          maintainAspectRatio: false,
-          // Container for pan options
-          plugins: {
+          maintainAspectRatio: false
+
+          /* plugins: {
             zoom: {
               pan: {
                 enabled: true,
@@ -199,7 +186,7 @@ export default {
                 mode: 'x'
               }
             }
-          }
+          } */
 
         }
         this.$Progress.finish()

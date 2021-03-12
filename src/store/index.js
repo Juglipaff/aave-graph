@@ -11,6 +11,39 @@ function createContract () {
   const diamond = new ethers.Contract(aavegotchiDiamondAddress, abi, provider)
   return diamond
 }
+
+async function openPortalPrices (blocksShown) {
+  const diamond = createContract()
+  var dataArray = []
+  var promises = []
+  const results = await diamond.getERC721Listings(2, 'purchased', blocksShown.blocksShown)
+  for (var i = 0; i < results.length; i++) {
+    dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16), rarity: 0 })
+    promises.push(diamond.portalAavegotchiTraits(parseInt(results[i].erc721TokenId._hex, 16)))
+  }
+  await Promise.allSettled(promises).then(values => {
+    for (var i = 0; i < values.length; i++) {
+      if (values[i].status === 'fulfilled') {
+        var maxBRS = 0
+        for (var n = 0; n < values[i].value.length; n++) {
+          var BRS = 0
+          for (var k = 0; k < 6; k++) {
+            const traitValue = values[i].value[n].numericTraits[k]
+            BRS += traitValue >= 50 ? traitValue : 100 - traitValue
+          }
+          if (maxBRS < BRS) {
+            maxBRS = BRS
+          }
+        }
+        dataArray[i].rarity = maxBRS
+        continue
+      }
+      dataArray[i] = {}
+    }
+  })
+  return dataArray
+}
+
 async function portalPrices (blocksShown) {
   const diamond = createContract()
   var dataArray = []
@@ -42,12 +75,22 @@ async function gotchiPrices (blocksShown) {
   }) */
   const results = await diamond.getERC721Listings(3, 'purchased', blocksShown.blocksShown)
   for (var i = 0; i < results.length; i++) {
-    dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16), category: parseInt(results[i].category._hex, 16), rarity: 0 /* parseInt(results[i].aavegotchiInfo_.modifiedRarityScore._hex, 16) */ })
-    promises.push(diamond.getAavegotchi(parseInt(results[i].erc721TokenId._hex, 16)))
+    dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16), rarity: 0 /* parseInt(results[i].aavegotchiInfo_.modifiedRarityScore._hex, 16) */ })
+    const localItem = localStorage.getItem(results[i].erc721TokenId._hex)
+    if (localItem === null || localItem === undefined) {
+      console.log('key not found in the hash')
+      promises.push(diamond.getAavegotchi(parseInt(results[i].erc721TokenId._hex, 16)))
+    } else {
+      promises.push({ modifiedRarityScore: { _hex: localItem }, localStorage: true })
+    }
   }
+
   await Promise.all(promises).then(values => {
     for (var i = 0; i < values.length; i++) {
       dataArray[i].rarity = parseInt(values[i].modifiedRarityScore._hex, 16)
+      if (values[i].localStorage === undefined || values[i].localStorage === null) {
+        localStorage.setItem(values[i].tokenId._hex, values[i].modifiedRarityScore._hex)
+      }
     }
   })
   return dataArray
@@ -69,6 +112,7 @@ export default new Vuex.Store({
   state: {
     graphs: [],
     portalGraphs: [],
+    openPortalGraphs: [],
     listings: [],
     errors: []
   },
@@ -79,6 +123,10 @@ export default new Vuex.Store({
     },
     SET_PORTAL_GRAPHS (state, graphData) {
       state.portalGraphs = graphData
+      state.errors = []
+    },
+    SET_OPEN_PORTAL_GRAPHS (state, graphData) {
+      state.openPortalGraphs = graphData
       state.errors = []
     },
     SET_LISTINGS (state, listingData) {
@@ -101,6 +149,14 @@ export default new Vuex.Store({
     fetchPortalGraph ({ commit }, blocksShown) {
       return portalPrices(blocksShown).then(response => {
         commit('SET_PORTAL_GRAPHS', response)
+      }).catch(error => {
+        commit('SET_ERRORS', error)
+        throw error
+      })
+    },
+    fetchOpenPortalGraph ({ commit }, blocksShown) {
+      return openPortalPrices(blocksShown).then(response => {
+        commit('SET_OPEN_PORTAL_GRAPHS', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
         throw error
