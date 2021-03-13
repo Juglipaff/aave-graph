@@ -1,9 +1,9 @@
 <template>
-    <div>
+    <div class="container">
       <button v-on:click="sortPortals">Sort</button> <br>
-  <a v-for="listing in listings" :key="listing.link" target="_blank" :href="listing.link">
-   {{parseInt(listing.price)}} GHST, ${{parseInt(listing.price*price)}}<br>
-  </a>
+  <div v-for="listing in listings" :key="listing.link" target="_blank">
+   {{parseInt(listing.price)}} GHST, ${{parseInt(listing.price*price)}} - <a :href="listing.link">{{listing.link}}</a><br>
+  </div>
     </div>
 </template>
 
@@ -45,11 +45,21 @@ export default {
     sortPortals () {
       if (this.sort) {
         this.sort = !this.sort
-        this.listings.sort((a, b) => b.price - a.price)
+        this.listings.sort((a, b) => {
+          if (b.price < a.price) {
+            return -1
+          }
+          return 1
+        })
         return
       }
       this.sort = !this.sort
-      this.listings.sort((a, b) => a.price - b.price)
+      this.listings.sort((a, b) => {
+        if (a.price < b.price) {
+          return -1
+        }
+        return 1
+      })
     }
   }
 }
@@ -57,7 +67,8 @@ export default {
 
 <style scoped>
 a{
-   color: #20a060;
+  font-size: 18px;
+   color: #0088cc;
 }
 button{
   width:80px;

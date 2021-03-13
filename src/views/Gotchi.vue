@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="container">
 
-<input type="checkbox"  v-model="isRarityTurnedOn"> Custom rarity: From <input type="number" v-model="rarityLow"  min="0" max="1000">
+<input class="checkbox" type="checkbox"  v-model="isRarityTurnedOn"> Custom rarity: From <input type="number" v-model="rarityLow"  min="0" max="1000">
      To <input type="number" v-model="rarityHigh"  min="0" max="1000"> <br>    <br>
     {{blocksShown}}  <br>
 
@@ -52,7 +52,7 @@ export default {
   name: 'Gotchi',
   computed: {
     ...mapState({
-      graphs: 'graphs',
+      gotchiGraph: 'gotchiGraph',
       errors: 'errors'
     })
   },
@@ -77,7 +77,7 @@ export default {
       rarityHigh: 0,
       currentPrice: 0,
       isRarityTurnedOn: false,
-      maxPrice: 0,
+      // maxPrice: 0,
       priceForGotchisArrays: []
 
     }
@@ -106,35 +106,35 @@ export default {
 
       await this.$store.dispatch('fetchGraph', { blocksShown: this.blocksShown })
         .then(() => {
-          for (var i = 0; i < this.graphs.length; i++) {
-            if (this.graphs[i].y > this.maxPrice) {
-              this.maxPrice = parseInt(this.graphs[i].y)
-            }
+          for (var i = 0; i < this.gotchiGraph.length; i++) {
+            // if (this.gotchiGraph[i].y > this.maxPrice) {
+            //   this.maxPrice = parseInt(this.gotchiGraph[i].y)
+          //  }
             // this.colorArray.push(`${lerpColor('#100000', '#ff0000', Math.min(Math.max((-1800 + this.graphs[i].rarity * 4.5) / 1000), 1), 0)}`)
-            const day = Math.floor(this.graphs[i].x / 86400) * 86400
+            const day = Math.floor(this.gotchiGraph[i].x / 86400) * 86400
             const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
 
             // this.priceForGotchi.push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice) })
             if (!this.isRarityTurnedOn) {
-              if (this.graphs[i].rarity < 350) {
-                this.priceForGotchisArrays[0].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
-              } else if (this.graphs[i].rarity < 410) {
-                this.priceForGotchisArrays[1].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
-              } else if (this.graphs[i].rarity < 470) {
-                this.priceForGotchisArrays[2].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
-              } else if (this.graphs[i].rarity < 530) {
-                this.priceForGotchisArrays[3].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
-              } else if (this.graphs[i].rarity < 590) {
-                this.priceForGotchisArrays[4].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
-              } else if (this.graphs[i].rarity < 650) {
-                this.priceForGotchisArrays[5].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
+              if (this.gotchiGraph[i].rarity < 350) {
+                this.priceForGotchisArrays[0].push({ x: toDateTime(this.gotchiGraph[i].x), y: this.gotchiGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.gotchiGraph[i].rarity, GHST: this.gotchiGraph[i].y })
+              } else if (this.gotchiGraph[i].rarity < 410) {
+                this.priceForGotchisArrays[1].push({ x: toDateTime(this.gotchiGraph[i].x), y: this.gotchiGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.gotchiGraph[i].rarity, GHST: this.gotchiGraph[i].y })
+              } else if (this.gotchiGraph[i].rarity < 470) {
+                this.priceForGotchisArrays[2].push({ x: toDateTime(this.gotchiGraph[i].x), y: this.gotchiGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.gotchiGraph[i].rarity, GHST: this.gotchiGraph[i].y })
+              } else if (this.gotchiGraph[i].rarity < 530) {
+                this.priceForGotchisArrays[3].push({ x: toDateTime(this.gotchiGraph[i].x), y: this.gotchiGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.gotchiGraph[i].rarity, GHST: this.gotchiGraph[i].y })
+              } else if (this.gotchiGraph[i].rarity < 590) {
+                this.priceForGotchisArrays[4].push({ x: toDateTime(this.gotchiGraph[i].x), y: this.gotchiGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.gotchiGraph[i].rarity, GHST: this.gotchiGraph[i].y })
+              } else if (this.gotchiGraph[i].rarity < 650) {
+                this.priceForGotchisArrays[5].push({ x: toDateTime(this.gotchiGraph[i].x), y: this.gotchiGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.gotchiGraph[i].rarity, GHST: this.gotchiGraph[i].y })
               } else {
-                this.priceForGotchisArrays[6].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
+                this.priceForGotchisArrays[6].push({ x: toDateTime(this.gotchiGraph[i].x), y: this.gotchiGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.gotchiGraph[i].rarity, GHST: this.gotchiGraph[i].y })
               }
               continue
             }
-            if (this.graphs[i].rarity <= this.rarityHigh && this.graphs[i].rarity >= this.rarityLow) {
-              this.priceForGotchisArrays[0].push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.graphs[i].rarity, GHST: this.graphs[i].y })
+            if (this.gotchiGraph[i].rarity <= this.rarityHigh && this.gotchiGraph[i].rarity >= this.rarityLow) {
+              this.priceForGotchisArrays[0].push({ x: toDateTime(this.gotchiGraph[i].x), y: this.gotchiGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.gotchiGraph[i].rarity, GHST: this.gotchiGraph[i].y })
             }
           }
 
@@ -181,7 +181,7 @@ export default {
                   id: 'left-y-axis',
                   ticks: {
 
-                    max: this.maxPrice,
+                    //  max: this.maxPrice,
                     callback: (value) => {
                       return '$' + value
                     }
@@ -285,6 +285,7 @@ export default {
 }
 </script>
 <style scoped>
+
 button{
   width:70px;
   height:25px;

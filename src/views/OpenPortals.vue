@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="container">
 
 <input type="checkbox"  v-model="isRarityTurnedOn"> Custom rarity: From <input type="number" v-model="rarityLow"  min="0" max="1000">
      To <input type="number" v-model="rarityHigh"  min="0" max="1000"> <br>    <br>
@@ -49,10 +49,10 @@ function toDateTime (secs) {
 export default {
   store,
   components: { Chart },
-  name: 'Gotchi',
+  name: 'OpenPortals',
   computed: {
     ...mapState({
-      openPortalGraphs: 'openPortalGraphs',
+      openPortalGraph: 'openPortalGraph',
       errors: 'errors'
     })
   },
@@ -77,8 +77,8 @@ export default {
       rarityHigh: 0,
       currentPrice: 0,
       isRarityTurnedOn: false,
-      maxPrice: 0,
-      priceForGotchisArrays: []
+      // maxPrice: 0,
+      pricesForOpenPortalsArrays: []
 
     }
   },
@@ -86,7 +86,7 @@ export default {
 
     async updateGraph () {
       for (var i = 0; i < 7; i++) {
-        this.priceForGotchisArrays[i] = []
+        this.pricesForOpenPortalsArrays[i] = []
       }
       this.$Progress.start()
       await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
@@ -106,46 +106,45 @@ export default {
 
       await this.$store.dispatch('fetchOpenPortalGraph', { blocksShown: this.blocksShown })
         .then(() => {
-          for (var i = 0; i < this.openPortalGraphs.length; i++) {
-            if (this.openPortalGraphs[i].rarity !== undefined) {
-              if (this.openPortalGraphs[i].y > this.maxPrice) {
-                this.maxPrice = parseInt(this.openPortalGraphs[i].y)
-              }
-
+          for (var i = 0; i < this.openPortalGraph.length; i++) {
+            if (this.openPortalGraph[i].rarity !== undefined) {
+              // if (this.openPortalGraph[i].y > this.maxPrice) {
+              //   this.maxPrice = parseInt(this.openPortalGraph[i].y)
+            //  }
               // this.colorArray.push(`${lerpColor('#100000', '#ff0000', Math.min(Math.max((-1800 + this.graphs[i].rarity * 4.5) / 1000), 1), 0)}`)
-              const day = Math.floor(this.openPortalGraphs[i].x / 86400) * 86400
+              const day = Math.floor(this.openPortalGraph[i].x / 86400) * 86400
               const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
               // this.priceForGotchi.push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice) })
               if (!this.isRarityTurnedOn) {
-                if (this.openPortalGraphs[i].rarity < 420) {
-                  this.priceForGotchisArrays[0].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
-                } else if (this.openPortalGraphs[i].rarity < 450) {
-                  this.priceForGotchisArrays[1].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
-                } else if (this.openPortalGraphs[i].rarity < 480) {
-                  this.priceForGotchisArrays[2].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
-                } else if (this.openPortalGraphs[i].rarity < 510) {
-                  this.priceForGotchisArrays[3].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
-                } else if (this.openPortalGraphs[i].rarity < 540) {
-                  this.priceForGotchisArrays[4].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
-                } else if (this.openPortalGraphs[i].rarity < 570) {
-                  this.priceForGotchisArrays[5].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
+                if (this.openPortalGraph[i].rarity < 420) {
+                  this.pricesForOpenPortalsArrays[0].push({ x: toDateTime(this.openPortalGraph[i].x), y: this.openPortalGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraph[i].rarity, GHST: this.openPortalGraph[i].y })
+                } else if (this.openPortalGraph[i].rarity < 450) {
+                  this.pricesForOpenPortalsArrays[1].push({ x: toDateTime(this.openPortalGraph[i].x), y: this.openPortalGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraph[i].rarity, GHST: this.openPortalGraph[i].y })
+                } else if (this.openPortalGraph[i].rarity < 480) {
+                  this.pricesForOpenPortalsArrays[2].push({ x: toDateTime(this.openPortalGraph[i].x), y: this.openPortalGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraph[i].rarity, GHST: this.openPortalGraph[i].y })
+                } else if (this.openPortalGraph[i].rarity < 510) {
+                  this.pricesForOpenPortalsArrays[3].push({ x: toDateTime(this.openPortalGraph[i].x), y: this.openPortalGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraph[i].rarity, GHST: this.openPortalGraph[i].y })
+                } else if (this.openPortalGraph[i].rarity < 540) {
+                  this.pricesForOpenPortalsArrays[4].push({ x: toDateTime(this.openPortalGraph[i].x), y: this.openPortalGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraph[i].rarity, GHST: this.openPortalGraph[i].y })
+                } else if (this.openPortalGraph[i].rarity < 570) {
+                  this.pricesForOpenPortalsArrays[5].push({ x: toDateTime(this.openPortalGraph[i].x), y: this.openPortalGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraph[i].rarity, GHST: this.openPortalGraph[i].y })
                 } else {
-                  this.priceForGotchisArrays[6].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
+                  this.pricesForOpenPortalsArrays[6].push({ x: toDateTime(this.openPortalGraph[i].x), y: this.openPortalGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraph[i].rarity, GHST: this.openPortalGraph[i].y })
                 }
                 continue
               }
-              if (this.openPortalGraphs[i].rarity <= this.rarityHigh && this.openPortalGraphs[i].rarity >= this.rarityLow) {
-                this.priceForGotchisArrays[0].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
+              if (this.openPortalGraph[i].rarity <= this.rarityHigh && this.openPortalGraph[i].rarity >= this.rarityLow) {
+                this.pricesForOpenPortalsArrays[0].push({ x: toDateTime(this.openPortalGraph[i].x), y: this.openPortalGraph[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraph[i].rarity, GHST: this.openPortalGraph[i].y })
               }
             }
           }
 
           const datasets = []
-          for (var k = 0; k < this.priceForGotchisArrays.length; k++) {
-            if (this.priceForGotchisArrays[k].length !== 0) {
+          for (var k = 0; k < this.pricesForOpenPortalsArrays.length; k++) {
+            if (this.pricesForOpenPortalsArrays[k].length !== 0) {
               datasets.push({
                 label: `${this.isRarityTurnedOn === true ? 'custom Rarity' : 'To ' + (350 + k * 60)}`,
-                data: this.priceForGotchisArrays[k],
+                data: this.pricesForOpenPortalsArrays[k],
                 fill: true,
                 borderColor: this.colorArray[k],
                 backgroundColor: this.colorArray[k],
@@ -183,7 +182,7 @@ export default {
                   id: 'left-y-axis',
                   ticks: {
 
-                    max: this.maxPrice,
+                    //  max: this.maxPrice,
                     callback: (value) => {
                       return '$' + value
                     }

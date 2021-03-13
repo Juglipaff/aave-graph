@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="container">
      {{blocksShown}}  <br>
     Points shown:
     10 <input v-model="blocksShown" type="range" min="10" max="1900" cls="slider"> 1900
@@ -30,10 +30,10 @@ function toDateTime (secs) {
 export default {
   store,
   components: { Chart },
-  name: 'Portals',
+  name: 'ClosedPortals',
   computed: {
     ...mapState({
-      portalGraphs: 'portalGraphs',
+      closedPortalGraph: 'closedPortalGraph',
       errors: 'errors'
     })
   },
@@ -44,8 +44,8 @@ export default {
       priceForClosedPortals: [],
       blocksShown: 500,
       prices: [],
-      currentPrice: 0,
-      maxPrice: 0
+      currentPrice: 0
+      // maxPrice: 0
     }
   },
   methods: {
@@ -67,13 +67,13 @@ export default {
           console.log(error)
         })
       await this.$store.dispatch('fetchPortalGraph', { blocksShown: this.blocksShown }).then(() => {
-        for (var i = 0; i < this.portalGraphs.length; i++) {
-          const day = Math.floor(this.portalGraphs[i].x / 86400) * 86400
+        for (var i = 0; i < this.closedPortalGraph.length; i++) {
+          const day = Math.floor(this.closedPortalGraph[i].x / 86400) * 86400
           const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-          this.priceForClosedPortals.push({ x: toDateTime(this.portalGraphs[i].x), y: this.portalGraphs[i].y * (price ? price[1] : this.currentPrice) })
-          if (this.portalGraphs[i].y > this.maxPrice) {
-            this.maxPrice = parseInt(this.portalGraphs[i].y)
-          }
+          this.priceForClosedPortals.push({ x: toDateTime(this.closedPortalGraph[i].x), y: this.closedPortalGraph[i].y * (price ? price[1] : this.currentPrice) })
+          /*   if (this.closedPortalGraph[i].y > this.maxPrice) {
+            this.maxPrice = parseInt(this.closedPortalGraph[i].y)
+          } */
         }
 
         this.chartData = {
@@ -98,7 +98,7 @@ export default {
                 type: 'logarithmic',
                 id: 'left-y-axis',
                 ticks: {
-                  max: this.maxPrice,
+                  // max: this.maxPrice,
                   callback: (value) => {
                     return '$' + value
                   }
@@ -156,7 +156,7 @@ export default {
               afterLabel: (tooltipItem) => {
                 const label = ['NFT price: ',
                   '$' + parseInt(tooltipItem.yLabel),
-                  parseInt(this.portalGraphs[tooltipItem.index].y) + ' GHST'
+                  parseInt(this.closedPortalGraph[tooltipItem.index].y) + ' GHST'
                 ]
                 return label
               }
@@ -199,3 +199,14 @@ export default {
   }
 }
 </script>
+<style scoped>
+
+#chart{
+  margin-top:30px;
+}
+button{
+  width:70px;
+  height:25px;
+
+}
+</style>

@@ -5,15 +5,15 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import abi from '@/diamond.json'
 
-function createContract () {
+function getAavegotchiContract () {
   const aavegotchiDiamondAddress = '0x86935F11C86623deC8a25696E1C19a8659CbF95d'
   const provider = new ethers.providers.JsonRpcProvider('https://rpc-mainnet.matic.network/')
   const diamond = new ethers.Contract(aavegotchiDiamondAddress, abi, provider)
   return diamond
 }
 
-async function openPortalPrices (blocksShown) {
-  const diamond = createContract()
+async function getOpenPortalPricesAndRarity (blocksShown) {
+  const diamond = getAavegotchiContract()
   var dataArray = []
   var returnArray = []
   var promises = []
@@ -60,8 +60,8 @@ async function openPortalPrices (blocksShown) {
   return returnArray
 }
 
-async function portalPrices (blocksShown) {
-  const diamond = createContract()
+async function getClosedPortalPrices (blocksShown) {
+  const diamond = getAavegotchiContract()
   var dataArray = []
   const results = await diamond.getERC721Listings(0, 'purchased', blocksShown.blocksShown)
   for (var i = 0; i < results.length; i++) {
@@ -70,29 +70,15 @@ async function portalPrices (blocksShown) {
   return dataArray
 }
 
-async function gotchiPrices (blocksShown) {
-  const diamond = createContract()
-  // const filter = diamond.filters.ERC721ExecutedListing()
-  // const completedBuys = await diamond.queryFilter(filter, 11516320)
+async function getGotchiPricesAndRarity (blocksShown) {
+  const diamond = getAavegotchiContract()
   var dataArray = []
   var promises = []
-  /* for (var i = 0; i < results.length; i++) {
-    var category = parseInt(results[i].args.category._hex, 16)
-    if (isGotchi) {
-      promises.push(category === 3 ? diamond.getAavegotchi(parseInt(results[i].args.erc721TokenId._hex, 16)) : Promise.resolve(0))
-    }
-    dataArray.push({ y: parseInt(results[i].args.priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].args.time._hex, 16), category: category, rarity: 0 })
-  }
-
-  await Promise.all(promises).then(values => {
-    for (var i = 0; i < values.length; i++) {
-      dataArray[i].rarity = values[i] === 0 ? 0 : parseInt(values[i].modifiedRarityScore._hex, 16)
-    }
-  }) */
   const results = await diamond.getERC721Listings(3, 'purchased', blocksShown.blocksShown)
+
   for (var i = 0; i < results.length; i++) {
-    dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16), rarity: 0 /* parseInt(results[i].aavegotchiInfo_.modifiedRarityScore._hex, 16) */ })
-    const localItem = localStorage.getItem(results[i].erc721TokenId._hex)
+    dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16), rarity: 0 })
+    const localItem = localStorage.getItem(JSON.stringify({ id: results[i].erc721TokenId._hex, category: 3 }))
     if (localItem === null || localItem === undefined) {
       console.log('the key was not found in the cache')
       promises.push(diamond.getAavegotchi(parseInt(results[i].erc721TokenId._hex, 16)))
@@ -103,10 +89,9 @@ async function gotchiPrices (blocksShown) {
 
   await Promise.all(promises).then(values => {
     for (var i = 0; i < values.length; i++) {
-      console.log(values[i])
       dataArray[i].rarity = parseInt(values[i].modifiedRarityScore._hex, 16)
       if (values[i].localStorage !== true) {
-        localStorage.setItem(values[i].tokenId._hex, values[i].modifiedRarityScore._hex)
+        localStorage.setItem(JSON.stringify({ id: values[i].tokenId._hex, category: 3 }), values[i].modifiedRarityScore._hex)
       }
     }
   })
@@ -114,7 +99,7 @@ async function gotchiPrices (blocksShown) {
 }
 
 async function getBazzarItems () {
-  const diamond = createContract()
+  const diamond = getAavegotchiContract()
   const listingInfo = await diamond.getERC721Listings(0, 'listed', 8000)
   var listings = []
   for (let i = 0; i < listingInfo.length; i++) {
@@ -123,31 +108,96 @@ async function getBazzarItems () {
   console.log(`Listing length: ${listings.length} items`)
   return listings
 }
+
+async function getWearablePrices (blocksShown) {
+  const diamond = getAavegotchiContract()
+  const wearablePriceList = await diamond.getERC1155Listings(0, 'purchased', blocksShown.blocksShown)
+  var wearablePrices = []
+  for (let i = 0; i < wearablePriceList.length; i++) {
+    wearablePrices.push({ y: parseInt(wearablePriceList[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(wearablePriceList[i].timeLastPurchased._hex, 16), id: parseInt(wearablePriceList[i].erc1155TypeId._hex, 16) })
+  }
+  return wearablePrices
+}
+
+// getWearablePrices({ blocksShown: 800 })
+
+async function getWearableList () {
+  const diamond = getAavegotchiContract()
+  const itemSets = await diamond.getWearableSets()
+  var promises = []
+  var wearables = []
+  var maxItemId = 0
+  for (var i = 0; i < itemSets.length; i++) {
+    for (var n = 0; n < itemSets[i].wearableIds.length; n++) {
+      if (itemSets[i].wearableIds[n] > maxItemId) {
+        maxItemId = itemSets[i].wearableIds[n]
+      }
+      /* const localItem = localStorage.getItem(JSON.stringify({ id: itemSets[i].wearableIds[n], category: 'wearable' }))
+      if (localItem === null || localItem === undefined) {
+        console.log('the key was not found in the cache')
+        promises.push(diamond.getItemType(itemSets[i].wearableIds[n]))
+        continue
+      }
+      promises.push({ name: localItem, svgId: itemSets[i].wearableIds[n], localStorage: true }) */
+    }
+  }
+
+  for (var k = 0; k <= maxItemId; k++) {
+    const localItem = localStorage.getItem(JSON.stringify({ id: k, category: 'wearable' }))
+    if (localItem === null || localItem === undefined) {
+      console.log('the key was not found in the cache')
+      promises.push(diamond.getItemType(k))
+      continue
+    }
+    promises.push({ name: localItem, svgId: k, localStorage: true })
+  }
+  await Promise.all(promises).then(values => {
+    for (var i = 0; i < values.length; i++) {
+      if (!wearables.some(obj => obj.name === values[i].name && obj.id === values[i].svgId)) {
+        wearables.push({ name: values[i].name, id: values[i].svgId })
+        if (values[i].localStorage !== true) {
+          localStorage.setItem(JSON.stringify({ id: values[i].svgId, category: 'wearable' }), values[i].name)
+        }
+      }
+    }
+  })
+  return wearables
+}
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    graphs: [],
-    portalGraphs: [],
-    openPortalGraphs: [],
+    gotchiGraph: [],
+    closedPortalGraph: [],
+    openPortalGraph: [],
     listings: [],
+    wearableList: [],
+    wearableGraph: [],
     errors: []
   },
   mutations: {
-    SET_GRAPHS (state, graphData) {
-      state.graphs = graphData
+    SET_GOTCHI_GRAPH (state, graphData) {
+      state.gotchiGraph = graphData
       state.errors = []
     },
-    SET_PORTAL_GRAPHS (state, graphData) {
-      state.portalGraphs = graphData
+    SET_CLOSED_PORTAL_GRAPH (state, graphData) {
+      state.closedPortalGraph = graphData
       state.errors = []
     },
-    SET_OPEN_PORTAL_GRAPHS (state, graphData) {
-      state.openPortalGraphs = graphData
+    SET_OPEN_PORTAL_GRAPH (state, graphData) {
+      state.openPortalGraph = graphData
       state.errors = []
     },
     SET_LISTINGS (state, listingData) {
       state.listings = listingData
+      state.errors = []
+    },
+    SET_WEARABLES_LIST (state, wearableList) {
+      state.wearableList = wearableList
+      state.errors = []
+    },
+    SET_WEARABLES_GRAPH (state, wearableGraph) {
+      state.wearableGraph = wearableGraph
       state.errors = []
     },
     SET_ERRORS (state, errorData) {
@@ -156,24 +206,40 @@ export default new Vuex.Store({
   },
   actions: {
     fetchGraph ({ commit }, blocksShown) {
-      return gotchiPrices(blocksShown).then(response => {
-        commit('SET_GRAPHS', response)
+      return getGotchiPricesAndRarity(blocksShown).then(response => {
+        commit('SET_GOTCHI_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
         throw error
       })
     },
     fetchPortalGraph ({ commit }, blocksShown) {
-      return portalPrices(blocksShown).then(response => {
-        commit('SET_PORTAL_GRAPHS', response)
+      return getClosedPortalPrices(blocksShown).then(response => {
+        commit('SET_CLOSED_PORTAL_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
         throw error
       })
     },
     fetchOpenPortalGraph ({ commit }, blocksShown) {
-      return openPortalPrices(blocksShown).then(response => {
-        commit('SET_OPEN_PORTAL_GRAPHS', response)
+      return getOpenPortalPricesAndRarity(blocksShown).then(response => {
+        commit('SET_OPEN_PORTAL_GRAPH', response)
+      }).catch(error => {
+        commit('SET_ERRORS', error)
+        throw error
+      })
+    },
+    fetchWearablesList ({ commit }) {
+      return getWearableList().then(response => {
+        commit('SET_WEARABLES_LIST', response)
+      }).catch(error => {
+        commit('SET_ERRORS', error)
+        throw error
+      })
+    },
+    fetchWearablesGraph ({ commit }, blocksShown) {
+      return getWearablePrices(blocksShown).then(response => {
+        commit('SET_WEARABLES_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
         throw error
