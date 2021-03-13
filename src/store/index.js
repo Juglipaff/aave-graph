@@ -56,7 +56,6 @@ async function getOpenPortalPricesAndRarity (blocksShown) {
       localStorage.setItem(JSON.stringify({ id: dataArray[i].id, category: 2 }), 0)
     }
   })
-
   return returnArray
 }
 
@@ -98,12 +97,23 @@ async function getGotchiPricesAndRarity (blocksShown) {
   return dataArray
 }
 
-async function getBazzarItems () {
+async function getClosedPortalListings () {
   const diamond = getAavegotchiContract()
   const listingInfo = await diamond.getERC721Listings(0, 'listed', 8000)
   var listings = []
   for (let i = 0; i < listingInfo.length; i++) {
     listings.push({ link: `https://aavegotchi.com/baazaar/erc721/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001 })
+  }
+  console.log(`Listing length: ${listings.length} items`)
+  return listings
+}
+
+async function getWearableListings () {
+  const diamond = getAavegotchiContract()
+  const listingInfo = await diamond.getERC1155Listings(0, 'listed', 1500)
+  var listings = []
+  for (let i = 0; i < listingInfo.length; i++) {
+    listings.push({ link: `https://aavegotchi.com/baazaar/erc1155/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001, id: parseInt(listingInfo[i].erc1155TypeId._hex, 16), quantity: parseInt(listingInfo[i].quantity._hex, 16) })
   }
   console.log(`Listing length: ${listings.length} items`)
   return listings
@@ -119,8 +129,6 @@ async function getWearablePrices (blocksShown) {
   return wearablePrices
 }
 
-// getWearablePrices({ blocksShown: 800 })
-
 async function getWearableList () {
   const diamond = getAavegotchiContract()
   const itemSets = await diamond.getWearableSets()
@@ -132,18 +140,11 @@ async function getWearableList () {
       if (itemSets[i].wearableIds[n] > maxItemId) {
         maxItemId = itemSets[i].wearableIds[n]
       }
-      /* const localItem = localStorage.getItem(JSON.stringify({ id: itemSets[i].wearableIds[n], category: 'wearable' }))
-      if (localItem === null || localItem === undefined) {
-        console.log('the key was not found in the cache')
-        promises.push(diamond.getItemType(itemSets[i].wearableIds[n]))
-        continue
-      }
-      promises.push({ name: localItem, svgId: itemSets[i].wearableIds[n], localStorage: true }) */
     }
   }
 
   for (var k = 0; k <= maxItemId; k++) {
-    const localItem = localStorage.getItem(JSON.stringify({ id: k, category: 'wearable' }))
+    const localItem = sessionStorage.getItem(JSON.stringify({ id: k, category: 'wearable' }))
     if (localItem === null || localItem === undefined) {
       console.log('the key was not found in the cache')
       promises.push(diamond.getItemType(k))
@@ -151,18 +152,20 @@ async function getWearableList () {
     }
     promises.push({ name: localItem, svgId: k, localStorage: true })
   }
+
   await Promise.all(promises).then(values => {
     for (var i = 0; i < values.length; i++) {
       if (!wearables.some(obj => obj.name === values[i].name && obj.id === values[i].svgId)) {
         wearables.push({ name: values[i].name, id: values[i].svgId })
         if (values[i].localStorage !== true) {
-          localStorage.setItem(JSON.stringify({ id: values[i].svgId, category: 'wearable' }), values[i].name)
+          sessionStorage.setItem(JSON.stringify({ id: values[i].svgId, category: 'wearable' }), values[i].name)
         }
       }
     }
   })
   return wearables
 }
+
 Vue.use(Vuex)
 
 export default new Vuex.Store({
@@ -170,9 +173,10 @@ export default new Vuex.Store({
     gotchiGraph: [],
     closedPortalGraph: [],
     openPortalGraph: [],
-    listings: [],
+    closedPortalListings: [],
     wearableList: [],
     wearableGraph: [],
+    wearablesListings: [],
     errors: []
   },
   mutations: {
@@ -188,8 +192,8 @@ export default new Vuex.Store({
       state.openPortalGraph = graphData
       state.errors = []
     },
-    SET_LISTINGS (state, listingData) {
-      state.listings = listingData
+    SET_CLOSED_PORTALS_LISTINGS (state, listingData) {
+      state.closedPortalListings = listingData
       state.errors = []
     },
     SET_WEARABLES_LIST (state, wearableList) {
@@ -198,6 +202,10 @@ export default new Vuex.Store({
     },
     SET_WEARABLES_GRAPH (state, wearableGraph) {
       state.wearableGraph = wearableGraph
+      state.errors = []
+    },
+    SET_WEARABLES_LISTINGS (state, listingData) {
+      state.wearablesListings = listingData
       state.errors = []
     },
     SET_ERRORS (state, errorData) {
@@ -245,9 +253,17 @@ export default new Vuex.Store({
         throw error
       })
     },
-    updateListing ({ commit }) {
-      return getBazzarItems().then(response => {
-        commit('SET_LISTINGS', response)
+    fetchClosedPortalListing ({ commit }) {
+      return getClosedPortalListings().then(response => {
+        commit('SET_CLOSED_PORTALS_LISTINGS', response)
+      }).catch(error => {
+        commit('SET_ERRORS', error)
+        throw error
+      })
+    },
+    fetchWearablesListing ({ commit }) {
+      return getWearableListings().then(response => {
+        commit('SET_WEARABLES_LISTINGS', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
         throw error

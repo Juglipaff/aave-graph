@@ -183,7 +183,7 @@ export default {
 
                     //  max: this.maxPrice,
                     callback: (value) => {
-                      return '$' + value
+                      return `$${value}`
                     }
                   },
                   afterBuildTicks: (chartObj) => {
@@ -238,9 +238,9 @@ export default {
                 },
                 afterLabel: (tooltipItem, data) => {
                   const label = ['NFT price: ',
-                    '$' + parseInt(tooltipItem.yLabel),
-                    parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST) + ' GHST',
-                    'Rarity: ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].rarity
+                    `$${parseInt(tooltipItem.yLabel)}`,
+                    `${parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST)} GHST`,
+                    `Rarity: ${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].rarity}`
                   ]
 
                   return label

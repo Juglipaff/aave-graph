@@ -1,7 +1,7 @@
 <template>
     <div class="container">
       {{blocksShown}}  <br>
-       From the Dataset:
+       From Dataset of:
     10 <input v-model="blocksShown" type="range" min="10" max="1400"> 1400
     <button v-on:click="updateGraph()">Update</button>
     <br>
@@ -64,15 +64,17 @@ export default {
   },
   methods: {
     async getWearablesList () {
-      await this.$store.dispatch('fetchWearablesList')
-        .then(() => {
-          this.wearableList.sort((a, b) => {
-            if (a.name < b.name) {
-              return -1
-            }
-            return 1
+      if (this.wearableList !== []) {
+        await this.$store.dispatch('fetchWearablesList')
+          .then(() => {
+            this.wearableList.sort((a, b) => {
+              if (a.name < b.name) {
+                return -1
+              }
+              return 1
+            })
           })
-        })
+      }
     },
     updateGraphandCurrentId (wearableId) {
       this.currentItemId = wearableId
@@ -110,7 +112,7 @@ export default {
             type: 'scatter',
             datasets: [
               {
-                label: label ? label.name : 'Wearables Graph',
+                label: label ? label.name : 'Wearables Prices',
                 data: this.priceForWearables,
                 fill: false,
                 borderColor: '#0088cc',
@@ -128,7 +130,7 @@ export default {
                   id: 'left-y-axis',
                   ticks: {
                     callback: (value) => {
-                      return '$' + value
+                      return `$${value}`
                     }
                   },
                   afterBuildTicks: (chartObj) => {
@@ -182,7 +184,7 @@ export default {
                 },
                 afterLabel: (tooltipItem, data) => {
                   const label = ['NFT price: ',
-                    `$ ${parseInt(tooltipItem.yLabel)}`,
+                    `$${parseInt(tooltipItem.yLabel)}`,
                     `${parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST)} GHST`,
                     `Name: ${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].name}`
                   ]

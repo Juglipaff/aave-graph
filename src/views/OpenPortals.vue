@@ -31,21 +31,6 @@ function toDateTime (secs) {
   return t
 }
 
-/* function lerpColor (a, b, amount) {
-  var ah = +a.replace('#', '0x')
-  var ar = ah >> 16
-  var ag = ah >> 8 & 0xff
-  var ab = ah & 0xff
-  var bh = +b.replace('#', '0x')
-  var br = bh >> 16
-  var bg = bh >> 8 & 0xff
-  var bb = bh & 0xff
-  var rr = ar + amount * (br - ar)
-  var rg = ag + amount * (bg - ag)
-  var rb = ab + amount * (bb - ab)
-  return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + rb | 0).toString(16).slice(1)
-} */
-
 export default {
   store,
   components: { Chart },
@@ -184,7 +169,7 @@ export default {
 
                     //  max: this.maxPrice,
                     callback: (value) => {
-                      return '$' + value
+                      return `$${value}`
                     }
                   },
                   afterBuildTicks: (chartObj) => {
@@ -239,9 +224,9 @@ export default {
                 },
                 afterLabel: (tooltipItem, data) => {
                   const label = ['NFT price: ',
-                    '$' + parseInt(tooltipItem.yLabel),
-                    parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST) + ' GHST',
-                    'Rarity: ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].rarity
+                    `$${parseInt(tooltipItem.yLabel)}`,
+                    `${parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST)} GHST`,
+                    `Rarity: ${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].rarity}`
                   ]
 
                   return label

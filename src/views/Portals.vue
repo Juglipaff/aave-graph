@@ -2,7 +2,7 @@
   <div class="container">
      {{blocksShown}}  <br>
     Points shown:
-    10 <input v-model="blocksShown" type="range" min="10" max="1900" cls="slider"> 1900
+    10 <input v-model="blocksShown" type="range" min="10" max="1700" cls="slider"> 1700
     <button v-on:click="updateGraph">Update</button>
     <div v-if="errors.length!==0">
       OOPS... Something went wrong... <br>
@@ -100,7 +100,7 @@ export default {
                 ticks: {
                   // max: this.maxPrice,
                   callback: (value) => {
-                    return '$' + value
+                    return `$${value}`
                   }
                 },
                 afterBuildTicks: (chartObj) => {
@@ -155,8 +155,8 @@ export default {
               },
               afterLabel: (tooltipItem) => {
                 const label = ['NFT price: ',
-                  '$' + parseInt(tooltipItem.yLabel),
-                  parseInt(this.closedPortalGraph[tooltipItem.index].y) + ' GHST'
+                  `$${parseInt(tooltipItem.yLabel)}`,
+                  `${parseInt(this.closedPortalGraph[tooltipItem.index].y)} GHST`
                 ]
                 return label
               }
@@ -174,20 +174,6 @@ export default {
           responsive: true,
           responsiveAnimationDuration: 0,
           maintainAspectRatio: false
-
-          /* plugins: {
-            zoom: {
-              pan: {
-                enabled: true,
-                mode: 'x'
-              },
-              zoom: {
-                enabled: true,
-                mode: 'x'
-              }
-            }
-          } */
-
         }
         this.$Progress.finish()
       })

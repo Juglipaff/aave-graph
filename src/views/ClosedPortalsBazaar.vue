@@ -1,8 +1,8 @@
 <template>
     <div class="container">
       <button v-on:click="sortPortals">Sort</button> <br>
-  <div v-for="listing in listings" :key="listing.link" target="_blank">
-   {{parseInt(listing.price)}} GHST, ${{parseInt(listing.price*price)}} - <a :href="listing.link">{{listing.link}}</a><br>
+  <div v-for="listing in closedPortalListings" :key="listing.link" >
+   {{parseInt(listing.price)}} GHST, ${{parseInt(listing.price*price)}} - <a target="_blank" :href="listing.link">{{listing.link}}</a><br>
   </div>
     </div>
 </template>
@@ -14,10 +14,10 @@ import store from '../store/index.js'
 import axios from 'axios'
 export default {
   store,
-  name: 'Bazaar',
+  name: 'ClosedPortalsBazaar',
   computed: {
     ...mapState({
-      listings: 'listings',
+      closedPortalListings: 'closedPortalListings',
       errors: 'errors'
     })
   },
@@ -28,24 +28,25 @@ export default {
     }
   },
   created () {
-    var self = this
+    this.$Progress.start()
     axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
-      .then(function (response) {
-        self.price = parseFloat(response.data.aavegotchi.usd)
+      .then((response) => {
+        this.price = parseFloat(response.data.aavegotchi.usd)
       })
-      .catch(function (error) {
+      .catch((error) => {
         console.log(error)
       })
-    this.$store.dispatch('updateListing')
+    this.$store.dispatch('fetchClosedPortalListing')
       .then(() => {
-        this.listings.sort((a, b) => a.price - b.price)
+        this.closedPortalListings.sort((a, b) => a.price - b.price)
+        this.$Progress.finish()
       })
   },
   methods: {
     sortPortals () {
       if (this.sort) {
         this.sort = !this.sort
-        this.listings.sort((a, b) => {
+        this.closedPortalListings.sort((a, b) => {
           if (b.price < a.price) {
             return -1
           }
@@ -54,7 +55,7 @@ export default {
         return
       }
       this.sort = !this.sort
-      this.listings.sort((a, b) => {
+      this.closedPortalListings.sort((a, b) => {
         if (a.price < b.price) {
           return -1
         }
