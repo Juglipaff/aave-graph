@@ -15,15 +15,29 @@ function createContract () {
 async function openPortalPrices (blocksShown) {
   const diamond = createContract()
   var dataArray = []
+  var returnArray = []
   var promises = []
   const results = await diamond.getERC721Listings(2, 'purchased', blocksShown.blocksShown)
   for (var i = 0; i < results.length; i++) {
-    dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16), rarity: 0 })
-    promises.push(diamond.portalAavegotchiTraits(parseInt(results[i].erc721TokenId._hex, 16)))
+    dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16), rarity: 0, id: results[i].erc721TokenId._hex })
+    const localItem = localStorage.getItem(JSON.stringify({ id: results[i].erc721TokenId._hex, category: 2 }))
+    if (localItem === null || localItem === undefined) {
+      console.log('the key was not found in the cache')
+      promises.push(diamond.portalAavegotchiTraits(parseInt(results[i].erc721TokenId._hex, 16)))
+      continue
+    }
+    promises.push({ value: localItem, localStorage: true })
   }
+
   await Promise.allSettled(promises).then(values => {
     for (var i = 0; i < values.length; i++) {
       if (values[i].status === 'fulfilled') {
+        if (values[i].value.localStorage === true) {
+          if (values[i].value.value !== '0') {
+            returnArray.push({ y: dataArray[i].y, x: dataArray[i].x, rarity: values[i].value.value })
+          }
+          continue
+        }
         var maxBRS = 0
         for (var n = 0; n < values[i].value.length; n++) {
           var BRS = 0
@@ -35,13 +49,15 @@ async function openPortalPrices (blocksShown) {
             maxBRS = BRS
           }
         }
-        dataArray[i].rarity = maxBRS
+        returnArray.push({ y: dataArray[i].y, x: dataArray[i].x, rarity: maxBRS })
+        localStorage.setItem(JSON.stringify({ id: dataArray[i].id, category: 2 }), maxBRS)
         continue
       }
-      dataArray[i] = {}
+      localStorage.setItem(JSON.stringify({ id: dataArray[i].id, category: 2 }), 0)
     }
   })
-  return dataArray
+
+  return returnArray
 }
 
 async function portalPrices (blocksShown) {
@@ -78,17 +94,18 @@ async function gotchiPrices (blocksShown) {
     dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16), rarity: 0 /* parseInt(results[i].aavegotchiInfo_.modifiedRarityScore._hex, 16) */ })
     const localItem = localStorage.getItem(results[i].erc721TokenId._hex)
     if (localItem === null || localItem === undefined) {
-      console.log('key not found in the hash')
+      console.log('the key was not found in the cache')
       promises.push(diamond.getAavegotchi(parseInt(results[i].erc721TokenId._hex, 16)))
-    } else {
-      promises.push({ modifiedRarityScore: { _hex: localItem }, localStorage: true })
+      continue
     }
+    promises.push({ modifiedRarityScore: { _hex: localItem }, localStorage: true })
   }
 
   await Promise.all(promises).then(values => {
     for (var i = 0; i < values.length; i++) {
+      console.log(values[i])
       dataArray[i].rarity = parseInt(values[i].modifiedRarityScore._hex, 16)
-      if (values[i].localStorage === undefined || values[i].localStorage === null) {
+      if (values[i].localStorage !== true) {
         localStorage.setItem(values[i].tokenId._hex, values[i].modifiedRarityScore._hex)
       }
     }

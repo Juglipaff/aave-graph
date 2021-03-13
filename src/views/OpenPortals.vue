@@ -6,7 +6,7 @@
     {{blocksShown}}  <br>
 
     Points shown:
-    10 <input v-model="blocksShown" type="range" min="10" max="1500"> 1500
+    10 <input v-model="blocksShown" type="range" min="10" max="1300"> 1300
     <button v-on:click="updateGraph">Update</button>
     <div v-if="errors.length!==0">
       OOPS... Something went wrong... <br>
@@ -117,17 +117,17 @@ export default {
               const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
               // this.priceForGotchi.push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice) })
               if (!this.isRarityTurnedOn) {
-                if (this.openPortalGraphs[i].rarity < 350) {
+                if (this.openPortalGraphs[i].rarity < 420) {
                   this.priceForGotchisArrays[0].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
-                } else if (this.openPortalGraphs[i].rarity < 410) {
+                } else if (this.openPortalGraphs[i].rarity < 450) {
                   this.priceForGotchisArrays[1].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
-                } else if (this.openPortalGraphs[i].rarity < 470) {
+                } else if (this.openPortalGraphs[i].rarity < 480) {
                   this.priceForGotchisArrays[2].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
-                } else if (this.openPortalGraphs[i].rarity < 530) {
+                } else if (this.openPortalGraphs[i].rarity < 510) {
                   this.priceForGotchisArrays[3].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
-                } else if (this.openPortalGraphs[i].rarity < 590) {
+                } else if (this.openPortalGraphs[i].rarity < 540) {
                   this.priceForGotchisArrays[4].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
-                } else if (this.openPortalGraphs[i].rarity < 650) {
+                } else if (this.openPortalGraphs[i].rarity < 570) {
                   this.priceForGotchisArrays[5].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
                 } else {
                   this.priceForGotchisArrays[6].push({ x: toDateTime(this.openPortalGraphs[i].x), y: this.openPortalGraphs[i].y * (price ? price[1] : this.currentPrice), rarity: this.openPortalGraphs[i].rarity, GHST: this.openPortalGraphs[i].y })
