@@ -226,7 +226,7 @@ export default {
 .wrapper{
   height:calc(100vh - 260px);
   overflow-y:scroll;
-  width:260px;
+  width:280px;
   position: relative;
   float:left;
   top:25px;

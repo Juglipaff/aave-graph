@@ -95,7 +95,7 @@ a{
 .wrapper{
   height:calc(100vh - 150px);
   overflow-y:scroll;
-  width:260px;
+ width:280px;
   position: relative;
   float:left;
   top:0px;
