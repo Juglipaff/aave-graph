@@ -2,7 +2,7 @@
     <div class="container">
       {{blocksShown}}  <br>
        From Dataset of:
-    10 <input v-model="blocksShown" type="range" min="10" max="1400"> 1400
+    10 <input v-model="blocksShown" type="range" min="10" max="1500"> 1500
     <button v-on:click="updateGraph()">Update</button>
     <br>
      <div v-if="errors.length!==0">
@@ -22,7 +22,7 @@
            legendary: wearable.rarity===10,
            mythical: wearable.rarity===20,
            godlike:  wearable.rarity===50  }" :key="wearable.name" class="plate" v-on:click="filterGraph(wearable.id)">
-        <div class="item-name"><div class="rarity">{{returnRarityString(wearable.rarity)}} </div> <div class="name">{{wearable.name}} <br> Traded: {{returnLiquidityForItem(wearable.name)}} times</div></div>
+        <div class="item-name"><div class="rarity">{{returnRarityString(wearable.rarity)}} </div> <div class="name">{{wearable.name}} <br> Traded: {{returnLiquidityForItem(wearable.name)}} time(s)</div></div>
       </button>
    </div>
      <chart  v-bind:chartData="chartData" v-bind:options="options" class="chart"/>
@@ -180,6 +180,7 @@ export default {
     async updateGraph () {
       this.$Progress.start()
       this.priceForWearables = []
+      await this.getWearablesListings()
       await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
         .then((response) => {
           this.currentPrice = response.data.aavegotchi.usd
