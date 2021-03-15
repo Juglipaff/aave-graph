@@ -127,8 +127,4 @@ background-color:#e0e0e0
    border:2px solid #0088cc;
 }
 
-a{
-   color: #20a060;
-}
-
 </style>

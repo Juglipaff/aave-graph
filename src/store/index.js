@@ -108,9 +108,9 @@ async function getClosedPortalListings () {
   return listings
 }
 
-async function getWearableListings () {
+async function getWearableListings (blocksShown) {
   const diamond = getAavegotchiContract()
-  const listingInfo = await diamond.getERC1155Listings(0, 'listed', 1500)
+  const listingInfo = await diamond.getERC1155Listings(0, 'listed', blocksShown.blocksShown)
   var listings = []
   for (let i = 0; i < listingInfo.length; i++) {
     listings.push({ link: `https://aavegotchi.com/baazaar/erc1155/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001, id: parseInt(listingInfo[i].erc1155TypeId._hex, 16), quantity: parseInt(listingInfo[i].quantity._hex, 16) })
@@ -122,6 +122,7 @@ async function getWearableListings () {
 async function getWearablePrices (blocksShown) {
   const diamond = getAavegotchiContract()
   const wearablePriceList = await diamond.getERC1155Listings(0, 'purchased', blocksShown.blocksShown)
+
   var wearablePrices = []
   for (let i = 0; i < wearablePriceList.length; i++) {
     wearablePrices.push({ y: parseInt(wearablePriceList[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(wearablePriceList[i].timeLastPurchased._hex, 16), id: parseInt(wearablePriceList[i].erc1155TypeId._hex, 16) })
@@ -142,23 +143,22 @@ async function getWearableList () {
       }
     }
   }
-
   for (var k = 0; k <= maxItemId; k++) {
-    const localItem = sessionStorage.getItem(JSON.stringify({ id: k, category: 'wearable' }))
+    const localItem = JSON.parse(sessionStorage.getItem(JSON.stringify({ id: k, category: 'wearable' })))
     if (localItem === null || localItem === undefined) {
       console.log('the key was not found in the cache')
       promises.push(diamond.getItemType(k))
       continue
     }
-    promises.push({ name: localItem, svgId: k, localStorage: true })
+    promises.push({ name: localItem.name, svgId: k, localStorage: true, rarityScoreModifier: localItem.rarity })
   }
 
   await Promise.all(promises).then(values => {
     for (var i = 0; i < values.length; i++) {
       if (!wearables.some(obj => obj.name === values[i].name && obj.id === values[i].svgId)) {
-        wearables.push({ name: values[i].name, id: values[i].svgId })
+        wearables.push({ name: values[i].name, id: values[i].svgId, rarity: values[i].rarityScoreModifier })
         if (values[i].localStorage !== true) {
-          sessionStorage.setItem(JSON.stringify({ id: values[i].svgId, category: 'wearable' }), values[i].name)
+          sessionStorage.setItem(JSON.stringify({ id: values[i].svgId, category: 'wearable' }), JSON.stringify({ name: values[i].name, rarity: values[i].rarityScoreModifier }))
         }
       }
     }
@@ -261,8 +261,8 @@ export default new Vuex.Store({
         throw error
       })
     },
-    fetchWearablesListing ({ commit }) {
-      return getWearableListings().then(response => {
+    fetchWearablesListing ({ commit }, blocksShown) {
+      return getWearableListings(blocksShown).then(response => {
         commit('SET_WEARABLES_LISTINGS', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
