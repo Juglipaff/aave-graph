@@ -12,6 +12,8 @@ function getAavegotchiContract () {
   return diamond
 }
 
+// Open portals
+
 async function getOpenPortalPricesAndRarity (blocksShown) {
   const diamond = getAavegotchiContract()
   var dataArray = []
@@ -59,15 +61,7 @@ async function getOpenPortalPricesAndRarity (blocksShown) {
   return returnArray
 }
 
-async function getClosedPortalPrices (blocksShown) {
-  const diamond = getAavegotchiContract()
-  var dataArray = []
-  const results = await diamond.getERC721Listings(0, 'purchased', blocksShown.blocksShown)
-  for (var i = 0; i < results.length; i++) {
-    dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16) })
-  }
-  return dataArray
-}
+// Gotchi
 
 async function getGotchiPricesAndRarity (blocksShown) {
   const diamond = getAavegotchiContract()
@@ -97,6 +91,18 @@ async function getGotchiPricesAndRarity (blocksShown) {
   return dataArray
 }
 
+// Closed portals
+
+async function getClosedPortalPrices (blocksShown) {
+  const diamond = getAavegotchiContract()
+  var dataArray = []
+  const results = await diamond.getERC721Listings(0, 'purchased', blocksShown.blocksShown)
+  for (var i = 0; i < results.length; i++) {
+    dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16) })
+  }
+  return dataArray
+}
+
 async function getClosedPortalListings () {
   const diamond = getAavegotchiContract()
   const listingInfo = await diamond.getERC721Listings(0, 'listed', 8000)
@@ -107,6 +113,8 @@ async function getClosedPortalListings () {
   console.log(`Listing length: ${listings.length} items`)
   return listings
 }
+
+// Wearable items
 
 async function getWearableListings (blocksShown) {
   const diamond = getAavegotchiContract()
@@ -132,40 +140,57 @@ async function getWearablePrices (blocksShown) {
 
 async function getWearableList () {
   const diamond = getAavegotchiContract()
-  const itemSets = await diamond.getWearableSets()
-  var promises = []
+  var items = []
   var wearables = []
-  var maxItemId = 0
-  for (var i = 0; i < itemSets.length; i++) {
-    for (var n = 0; n < itemSets[i].wearableIds.length; n++) {
-      if (itemSets[i].wearableIds[n] > maxItemId) {
-        maxItemId = itemSets[i].wearableIds[n]
-      }
-    }
+  for (var k = 0; k <= 125; k++) {
+    items.push(k)
   }
-  for (var k = 0; k <= maxItemId; k++) {
-    const localItem = JSON.parse(sessionStorage.getItem(JSON.stringify({ id: k, category: 'wearable' })))
-    if (localItem === null || localItem === undefined) {
-      console.log('the key was not found in the cache')
-      promises.push(diamond.getItemType(k))
-      continue
-    }
-    promises.push({ name: localItem.name, svgId: k, localStorage: true, rarityScoreModifier: localItem.rarity, totalQuantity: localItem.quantity })
-  }
-
-  await Promise.all(promises).then(values => {
+  await diamond.getItemTypes(items).then((values) => {
     for (var i = 0; i < values.length; i++) {
       if (!wearables.some(obj => obj.name === values[i].name && obj.id === values[i].svgId)) {
-        var quantity = values[i].totalQuantity._hex
-        wearables.push({ name: values[i].name, id: values[i].svgId, rarity: values[i].rarityScoreModifier, quantity: quantity ? parseInt(values[i].totalQuantity._hex, 16) : values[i].totalQuantity })
-        if (values[i].localStorage !== true) {
-          sessionStorage.setItem(JSON.stringify({ id: values[i].svgId, category: 'wearable' }), JSON.stringify({ name: values[i].name, rarity: values[i].rarityScoreModifier, quantity: parseInt(values[i].totalQuantity._hex, 16) }))
-        }
+        wearables.push({ name: values[i].name, id: values[i].svgId, rarity: values[i].rarityScoreModifier, quantity: parseInt(values[i].totalQuantity._hex, 16) })
       }
     }
   })
   return wearables
 }
+
+// Consumable items
+
+async function getConsumableList () {
+  const diamond = getAavegotchiContract()
+  var items = []
+  var dataArray = []
+  for (var i = 126; i < 130; i++) {
+    items.push(i)
+  }
+  await diamond.getItemTypes(items).then((values) => {
+    for (var i = 0; i < values.length; i++) {
+      dataArray.push({ name: values[i].name, id: values[i].svgId, rarity: values[i].rarityScoreModifier, quantity: parseInt(values[i].totalQuantity._hex, 16) })
+    }
+  })
+  return dataArray
+}
+async function getConsumableListings (blocksShown) {
+  const diamond = getAavegotchiContract()
+  const listingInfo = await diamond.getERC1155Listings(2, 'listed', blocksShown.blocksShown)
+  var listings = []
+  for (let i = 0; i < listingInfo.length; i++) {
+    listings.push({ link: `https://aavegotchi.com/baazaar/erc1155/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001, id: parseInt(listingInfo[i].erc1155TypeId._hex, 16), quantity: parseInt(listingInfo[i].quantity._hex, 16) })
+  }
+  console.log(`Listing length: ${listings.length} items`)
+  return listings
+}
+async function getConsumablePrices (blocksShown) {
+  const diamond = getAavegotchiContract()
+  const consumablePriceList = await diamond.getERC1155Listings(2, 'purchased', blocksShown.blocksShown)
+  var consumablePrices = []
+  for (let i = 0; i < consumablePriceList.length; i++) {
+    consumablePrices.push({ y: parseInt(consumablePriceList[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(consumablePriceList[i].timeLastPurchased._hex, 16), id: parseInt(consumablePriceList[i].erc1155TypeId._hex, 16) })
+  }
+  return consumablePrices
+}
+
 Vue.use(Vuex)
 
 export default new Vuex.Store({
@@ -177,6 +202,9 @@ export default new Vuex.Store({
     wearableList: [],
     wearableGraph: [],
     wearablesListings: [],
+    consumableList: [],
+    consumablesListings: [],
+    consumablesGraph: [],
     errors: []
   },
   mutations: {
@@ -206,6 +234,18 @@ export default new Vuex.Store({
     },
     SET_WEARABLES_LISTINGS (state, listingData) {
       state.wearablesListings = listingData
+      state.errors = []
+    },
+    SET_CONSUMABLES_LIST (state, consumableList) {
+      state.consumableList = consumableList
+      state.errors = []
+    },
+    SET_CONSUMABLES_LISTINGS (state, listingData) {
+      state.consumablesListings = listingData
+      state.errors = []
+    },
+    SET_CONSUMABLES_GRAPH (state, consumableGraph) {
+      state.consumablesGraph = consumableGraph
       state.errors = []
     },
     SET_ERRORS (state, errorData) {
@@ -264,6 +304,30 @@ export default new Vuex.Store({
     fetchWearablesListing ({ commit }, blocksShown) {
       return getWearableListings(blocksShown).then(response => {
         commit('SET_WEARABLES_LISTINGS', response)
+      }).catch(error => {
+        commit('SET_ERRORS', error)
+        throw error
+      })
+    },
+    fetchConsumablesList ({ commit }) {
+      return getConsumableList().then(response => {
+        commit('SET_CONSUMABLES_LIST', response)
+      }).catch(error => {
+        commit('SET_ERRORS', error)
+        throw error
+      })
+    },
+    fetchConsumablesListing ({ commit }, blocksShown) {
+      return getConsumableListings(blocksShown).then(response => {
+        commit('SET_CONSUMABLES_LISTINGS', response)
+      }).catch(error => {
+        commit('SET_ERRORS', error)
+        throw error
+      })
+    },
+    fetchConsumablesGraph ({ commit }, blocksShown) {
+      return getConsumablePrices(blocksShown).then(response => {
+        commit('SET_CONSUMABLES_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
         throw error

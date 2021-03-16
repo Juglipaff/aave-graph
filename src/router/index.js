@@ -5,6 +5,7 @@ import Portals from '../views/Portals.vue'
 import ClosedPortalsBazaar from '../views/ClosedPortalsBazaar.vue'
 import OpenPortals from '../views/OpenPortals.vue'
 import Wearables from '../views/Wearables.vue'
+import Consumables from '../views/Consumables.vue'
 
 Vue.use(VueRouter)
 
@@ -34,7 +35,11 @@ const routes = [
     name: 'Wearables',
     component: Wearables
   },
-
+  {
+    path: '/consumables',
+    name: 'Consumables',
+    component: Consumables
+  },
   {
     path: '*',
     name: 'catchAll',

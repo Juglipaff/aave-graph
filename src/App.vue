@@ -6,6 +6,7 @@
       <router-link to="/closed-portals-bazaar">Closed Portals - Bazaar</router-link>
       <router-link to="/opened-portals">Open Portals</router-link>
       <router-link to="/wearables">Wearables</router-link>
+      <router-link to="/consumables">Consumables</router-link>
     </div>
     <vue-progress-bar></vue-progress-bar>
     <router-view/>
