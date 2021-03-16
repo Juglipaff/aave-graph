@@ -150,22 +150,22 @@ async function getWearableList () {
       promises.push(diamond.getItemType(k))
       continue
     }
-    promises.push({ name: localItem.name, svgId: k, localStorage: true, rarityScoreModifier: localItem.rarity })
+    promises.push({ name: localItem.name, svgId: k, localStorage: true, rarityScoreModifier: localItem.rarity, totalQuantity: localItem.quantity })
   }
 
   await Promise.all(promises).then(values => {
     for (var i = 0; i < values.length; i++) {
       if (!wearables.some(obj => obj.name === values[i].name && obj.id === values[i].svgId)) {
-        wearables.push({ name: values[i].name, id: values[i].svgId, rarity: values[i].rarityScoreModifier })
+        var quantity = values[i].totalQuantity._hex
+        wearables.push({ name: values[i].name, id: values[i].svgId, rarity: values[i].rarityScoreModifier, quantity: quantity ? parseInt(values[i].totalQuantity._hex, 16) : values[i].totalQuantity })
         if (values[i].localStorage !== true) {
-          sessionStorage.setItem(JSON.stringify({ id: values[i].svgId, category: 'wearable' }), JSON.stringify({ name: values[i].name, rarity: values[i].rarityScoreModifier }))
+          sessionStorage.setItem(JSON.stringify({ id: values[i].svgId, category: 'wearable' }), JSON.stringify({ name: values[i].name, rarity: values[i].rarityScoreModifier, quantity: parseInt(values[i].totalQuantity._hex, 16) }))
         }
       }
     }
   })
   return wearables
 }
-
 Vue.use(Vuex)
 
 export default new Vuex.Store({

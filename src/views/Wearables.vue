@@ -13,7 +13,6 @@
     </div>
     <button class="sort-button" v-on:click="nextSort">Sort: {{sortMethod}}</button>
     <br>
-
       <div class="wrapper">
       <button v-for="wearable in wearableList" :class="{
            common: wearable.rarity===1,
@@ -22,7 +21,8 @@
            legendary: wearable.rarity===10,
            mythical: wearable.rarity===20,
            godlike:  wearable.rarity===50  }" :key="wearable.name" class="plate" v-on:click="filterGraph(wearable.id)">
-        <div class="item-name"><div class="rarity">{{returnRarityString(wearable.rarity)}} </div> <div class="name">{{wearable.name}} <br> Traded: {{returnLiquidityForItem(wearable.name)}} time(s)</div></div>
+          <button class="favourite" v-on:click="toggleFavorite(wearable.id)"><font-awesome-icon  :class="getCurrentFavStatus(wearable.id)" :icon="['fas', 'star']"/></button>
+        <div class="item-name"><div class="rarity">{{returnRarityString(wearable.rarity)}} </div> <div class="name">{{wearable.name}}<br> Traded: {{returnLiquidityForItem(wearable.name)}} time(s)<br>Total Quantity: {{wearable.quantity}}</div></div>
       </button>
    </div>
      <chart  v-bind:chartData="chartData" v-bind:options="options" class="chart"/>
@@ -83,21 +83,40 @@ export default {
   },
   methods: {
     returnRarityString (rarity) {
-      var returnString = 'undefined'
       if (rarity === 1) {
-        returnString = 'Common'
+        return 'Common'
       } else if (rarity === 2) {
-        returnString = 'Uncommon'
+        return 'Uncommon'
       } else if (rarity === 5) {
-        returnString = 'Rare'
+        return 'Rare'
       } else if (rarity === 10) {
-        returnString = 'Legendary'
+        return 'Legendary'
       } else if (rarity === 20) {
-        returnString = 'Mythical'
+        return 'Mythical'
       } else if (rarity === 50) {
-        returnString = 'Godlike'
+        return 'Godlike'
       }
-      return returnString
+      return 'undefined'
+    },
+    getCurrentFavStatus (id) {
+      const currentFavouriteStatus = localStorage.getItem(id)
+      if (currentFavouriteStatus === null || currentFavouriteStatus === undefined) {
+        localStorage.setItem(id, false)
+        return 'not-fav'
+      } else if (currentFavouriteStatus === 'false') {
+        return 'not-fav'
+      } else if (currentFavouriteStatus === 'true') {
+        return 'fav'
+      }
+    },
+    toggleFavorite (id) {
+      const currentFavouriteStatus = localStorage.getItem(id)
+      if (currentFavouriteStatus === null || currentFavouriteStatus === undefined) {
+        localStorage.setItem(id, false)
+        return
+      }
+      const isTrue = (currentFavouriteStatus === 'true')
+      localStorage.setItem(id, !isTrue)
     },
     returnLiquidityForItem (name) {
       var liquidityItem = this.liquidity.find((a) => a.name === name)
@@ -126,6 +145,8 @@ export default {
         this.sortMethod = 'by Rarity'
       } else if (this.sortMethod === 'by Rarity') {
         this.sortMethod = 'by Liquidity'
+      } else if (this.sortMethod === 'by Liquidity') {
+        this.sortMethod = 'Favourite'
       } else {
         this.sortMethod = 'Alphabetically'
       }
@@ -152,6 +173,15 @@ export default {
             return 1
           }
           return -1
+        })
+      } else if (this.sortMethod === 'Favourite') {
+        this.wearableList.sort((a, b) => {
+          var favItem1 = localStorage.getItem(a.id)
+          var favItem2 = localStorage.getItem(b.id)
+          if (favItem1 === 'true' && favItem2 === 'false') {
+            return -1
+          }
+          return 1
         })
       } else {
         this.wearableList.sort((a, b) => {
@@ -316,6 +346,23 @@ export default {
 </script>
 
 <style scoped>
+.not-fav{
+ color:#bbbbbb !important;
+ transition:0.2s;
+}
+.fav{
+ color:#F5d500 !important;
+ transition:0.2s;
+}
+.favourite{
+  position:absolute;
+  font-size:20px;
+  left:21px;
+  margin-top:2px;
+  background-color:transparent;
+  border:0px;
+  outline:0px;
+}
 .name{
   color:black;
 }
@@ -404,7 +451,7 @@ margin-bottom:2px;
 }
 .plate{
   width:230px;
-  height:70px;
+  height:90px;
   border: 2px solid black;
   margin-top:3px;
   border-radius: 5px;
