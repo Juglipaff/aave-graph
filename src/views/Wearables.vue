@@ -12,6 +12,7 @@
       </div>
     </div>
     <button class="sort-button" v-on:click="nextSort">Sort: {{sortMethod}}</button>
+        <button class="switch_axis" v-on:click="switchYAxis()"> <div v-if="currentAxis">$</div><div v-else>GHST</div> </button>
     <br>
       <div class="wrapper">
       <button v-for="wearable in wearableList" :class="{
@@ -71,7 +72,8 @@ export default {
       priceForWearablesFiltered: [],
       wearablesListingsFiltered: [],
       sortMethod: 'Alphabetically',
-      liquidity: []
+      liquidity: [],
+      currentAxis: true
     }
   },
 
@@ -207,6 +209,28 @@ export default {
         this.liquidity.push({ name: this.wearableList[i].name, liquidityValue: itemLiquidityValue })
       }
     },
+    switchYAxis () {
+      if (this.chartData.datasets[0] !== undefined) {
+        this.currentAxis = !this.currentAxis
+        for (var i = 0; i < this.priceForWearablesFiltered.length; i++) {
+          this.priceForWearablesFiltered[i] = { x: this.priceForWearablesFiltered[i].x, y: this.priceForWearablesFiltered[i].GHST, GHST: this.priceForWearablesFiltered[i].y, id: this.priceForWearablesFiltered[i].id, name: this.priceForWearablesFiltered[i].name }
+        }
+        this.chartData = {
+          type: 'scatter',
+          datasets: [
+            {
+              label: this.chartData.datasets[0].label,
+              data: this.priceForWearablesFiltered,
+              fill: this.chartData.datasets[0].fill,
+              borderColor: this.chartData.datasets[0].borderColor,
+              borderWidth: this.chartData.datasets[0].borderWidth,
+              type: this.chartData.datasets[0].type,
+              yAxisID: this.chartData.datasets[0].yAxisID
+            }
+          ]
+        }
+      }
+    },
     async updateGraph () {
       this.$Progress.start()
       this.priceForWearables = []
@@ -230,8 +254,9 @@ export default {
           for (var i = 0; i < this.wearableGraph.length; i++) {
             const day = Math.floor(this.wearableGraph[i].x / 86400) * 86400
             const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-            this.priceForWearables.push({ x: toDateTime(this.wearableGraph[i].x), y: this.wearableGraph[i].y * (price ? price[1] : this.currentPrice), GHST: this.wearableGraph[i].y, id: this.wearableGraph[i].id, name: this.wearableList.find((obj) => obj.id === this.wearableGraph[i].id).name })
+            this.priceForWearables.push({ x: toDateTime(this.wearableGraph[i].x), y: parseInt(this.wearableGraph[i].y * (price ? price[1] : this.currentPrice)), GHST: parseInt(this.wearableGraph[i].y), id: this.wearableGraph[i].id, name: this.wearableList.find((obj) => obj.id === this.wearableGraph[i].id).name })
           }
+          this.currentAxis = true
           this.priceForWearablesFiltered = this.priceForWearables
           this.getLiquidities()
           this.updateGraphComponent('Wearables Prices')
@@ -264,7 +289,7 @@ export default {
               id: 'left-y-axis',
               ticks: {
                 callback: (value) => {
-                  return `$${value}`
+                  return this.currentAxis ? `$${value}` : `${value} GHST`
                 }
               },
               afterBuildTicks: (chartObj) => {
@@ -318,8 +343,8 @@ export default {
             },
             afterLabel: (tooltipItem, data) => {
               const label = ['NFT price: ',
-                    `$${parseInt(tooltipItem.yLabel)}`,
-                    `${parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST)} GHST`,
+                this.currentAxis ? `$${tooltipItem.yLabel}` : `$${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST}`,
+                this.currentAxis ? `${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST} GHST` : `${tooltipItem.yLabel} GHST`,
                     `Name: ${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].name}`
               ]
               return label
@@ -346,6 +371,14 @@ export default {
 </script>
 
 <style scoped>
+.switch_axis{
+  height:30px;
+  width:60px;
+  float:left;
+  position: absolute;
+  left:340px;
+  z-index:99
+}
 .not-fav{
  color:#bbbbbb !important;
  transition:0.2s;

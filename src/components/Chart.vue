@@ -2,7 +2,6 @@
 // @ is an alias to /src
 
 import { Line, mixins } from 'vue-chartjs'
-import zoom from 'chartjs-plugin-zoom'
 const { reactiveProp } = mixins
 export default {
   extends: Line,
@@ -12,7 +11,6 @@ export default {
     options: { type: Object }
   },
   mounted () {
-    this.addPlugin(zoom)
     this.renderChart(this.chartData, this.options)
   }
 }

@@ -5,6 +5,36 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import abi from '@/diamond.json'
 
+async function getClosedPortalsQuantity () {
+  const aavegotchiDiamondAddress = '0x86935F11C86623deC8a25696E1C19a8659CbF95d'
+  const provider = new ethers.providers.JsonRpcProvider('https://rpc-mainnet.matic.network/')
+  var minAbi = [{
+    constant: !0,
+    inputs: [{
+      name: '_owner',
+      type: 'address'
+    }],
+    name: 'balanceOf',
+    outputs: [{
+      name: 'balance',
+      type: 'uint256'
+    }],
+    type: 'function'
+  }, {
+    constant: !0,
+    inputs: [],
+    name: 'decimals',
+    outputs: [{
+      name: '',
+      type: 'uint8'
+    }],
+    type: 'function'
+  }]
+  const contract = new ethers.Contract('0xb0897686c545045aFc77CF20eC7A532E3120E0F1', minAbi, provider)
+  const balance = await contract.balanceOf(aavegotchiDiamondAddress)
+  return parseInt(balance._hex, 16) * 0.00000000000001
+}
+
 function getAavegotchiContract () {
   const aavegotchiDiamondAddress = '0x86935F11C86623deC8a25696E1C19a8659CbF95d'
   const provider = new ethers.providers.JsonRpcProvider('https://rpc-mainnet.matic.network/')
@@ -105,7 +135,7 @@ async function getClosedPortalPrices (blocksShown) {
 
 async function getClosedPortalListings () {
   const diamond = getAavegotchiContract()
-  const listingInfo = await diamond.getERC721Listings(0, 'listed', 8000)
+  const listingInfo = await diamond.getERC721Listings(0, 'listed', 2000)
   var listings = []
   for (let i = 0; i < listingInfo.length; i++) {
     listings.push({ link: `https://aavegotchi.com/baazaar/erc721/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001 })
@@ -205,6 +235,7 @@ export default new Vuex.Store({
     consumableList: [],
     consumablesListings: [],
     consumablesGraph: [],
+    closedPortalsQuantity: 0,
     errors: []
   },
   mutations: {
@@ -246,6 +277,10 @@ export default new Vuex.Store({
     },
     SET_CONSUMABLES_GRAPH (state, consumableGraph) {
       state.consumablesGraph = consumableGraph
+      state.errors = []
+    },
+    SET_CLOSED_PORTALS_QUANTITY (state, Balance) {
+      state.closedPortalsQuantity = Balance
       state.errors = []
     },
     SET_ERRORS (state, errorData) {
@@ -328,6 +363,14 @@ export default new Vuex.Store({
     fetchConsumablesGraph ({ commit }, blocksShown) {
       return getConsumablePrices(blocksShown).then(response => {
         commit('SET_CONSUMABLES_GRAPH', response)
+      }).catch(error => {
+        commit('SET_ERRORS', error)
+        throw error
+      })
+    },
+    fetchClosedPortalQuantity ({ commit }) {
+      return getClosedPortalsQuantity().then(response => {
+        commit('SET_CLOSED_PORTALS_QUANTITY', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
         throw error

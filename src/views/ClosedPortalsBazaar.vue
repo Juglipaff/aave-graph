@@ -1,5 +1,6 @@
 <template>
     <div class="container">
+     Closed portals left: {{closedPortalsQuantity}}
       <button v-on:click="sortPortals">Sort</button> <br>
   <div v-for="listing in closedPortalListings" :key="listing.link" >
    {{parseInt(listing.price)}} GHST, ${{parseInt(listing.price*price)}} - <a target="_blank" :href="listing.link">{{listing.link}}</a><br>
@@ -17,6 +18,7 @@ export default {
   name: 'ClosedPortalsBazaar',
   computed: {
     ...mapState({
+      closedPortalsQuantity: 'closedPortalsQuantity',
       closedPortalListings: 'closedPortalListings',
       errors: 'errors'
     })
@@ -41,6 +43,7 @@ export default {
         this.closedPortalListings.sort((a, b) => a.price - b.price)
         this.$Progress.finish()
       })
+    this.$store.dispatch('fetchClosedPortalQuantity')
   },
   methods: {
     sortPortals () {
