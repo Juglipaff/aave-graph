@@ -5,7 +5,7 @@
     10 <input v-model="blocksShown" type="range" min="10" max="1700" cls="slider"> 1700
     <button v-on:click="updateGraph">Update</button>
     <div v-if="errors.length!==0">
-      OOPS... Something went wrong... <br>
+      OOPS... Something went wrong... Check the console for more info<br>
       <div v-for="error in errors" :key="error.message">
         {{error.message}}
       </div>
@@ -52,16 +52,12 @@ export default {
     async updateGraph () {
       this.priceForClosedPortals = []
       this.$Progress.start()
-      await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
-        .then((response) => {
-          this.currentPrice = response.data.aavegotchi.usd
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+
       await axios.get('https://api.coingecko.com/api/v3/coins/aavegotchi/market_chart?vs_currency=usd&days=max&interval=daily')
         .then((response) => {
+          console.log('got coingecko response')
           this.prices = response.data.prices
+          this.currentPrice = this.prices[this.prices.length - 1][1]
         })
         .catch((error) => {
           console.log(error)

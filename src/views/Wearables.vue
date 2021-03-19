@@ -6,7 +6,7 @@
     <button v-on:click="updateGraph()">Update</button>
     <br>
      <div v-if="errors.length!==0">
-      OOPS... Something went wrong... <br>
+      OOPS... Something went wrong... Check the console for more info<br>
       <div v-for="error in errors" :key="error.message">
         {{error.message}}
       </div>
@@ -73,7 +73,8 @@ export default {
       wearablesListingsFiltered: [],
       sortMethod: 'Alphabetically',
       liquidity: [],
-      currentAxis: true
+      currentAxis: true,
+      maxPrice: 0
     }
   },
 
@@ -235,16 +236,11 @@ export default {
       this.$Progress.start()
       this.priceForWearables = []
       await this.getWearablesListings()
-      await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
-        .then((response) => {
-          this.currentPrice = response.data.aavegotchi.usd
-        })
-        .catch((error) => {
-          console.log(error)
-        })
       await axios.get('https://api.coingecko.com/api/v3/coins/aavegotchi/market_chart?vs_currency=usd&days=max&interval=daily')
         .then((response) => {
+          console.log('got coingecko response')
           this.prices = response.data.prices
+          this.currentPrice = this.prices[this.prices.length - 1][1]
         })
         .catch((error) => {
           console.log(error)
@@ -255,6 +251,9 @@ export default {
             const day = Math.floor(this.wearableGraph[i].x / 86400) * 86400
             const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
             this.priceForWearables.push({ x: toDateTime(this.wearableGraph[i].x), y: parseInt(this.wearableGraph[i].y * (price ? price[1] : this.currentPrice)), GHST: parseInt(this.wearableGraph[i].y), id: this.wearableGraph[i].id, name: this.wearableList.find((obj) => obj.id === this.wearableGraph[i].id).name })
+            if (this.priceForWearables[i].y > this.maxPrice) {
+              this.maxPrice = this.priceForWearables[i].y
+            }
           }
           this.currentAxis = true
           this.priceForWearablesFiltered = this.priceForWearables
@@ -288,13 +287,20 @@ export default {
               type: 'logarithmic',
               id: 'left-y-axis',
               ticks: {
+                autoSkip: false,
+                padding: 0,
                 callback: (value) => {
                   return this.currentAxis ? `$${value}` : `${value} GHST`
                 }
+
               },
               afterBuildTicks: (chartObj) => {
-                const ticks = [0, 5, 10, 50, 100, 500, 1000, 5000, 10000]
-                chartObj.ticks = ticks
+                var tickArray = []
+                tickArray.push(0)
+                for (var i = 1; i <= this.maxPrice; i *= 2) {
+                  tickArray.push(i)
+                }
+                chartObj.ticks = tickArray
               },
               gridLines: {
                 display: true
@@ -312,6 +318,8 @@ export default {
                 }
               },
               ticks: {
+                source: 'date',
+                autoSkip: false,
                 beginAtZero: true
               },
               gridLines: {

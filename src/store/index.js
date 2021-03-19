@@ -31,7 +31,11 @@ async function getClosedPortalsQuantity () {
     type: 'function'
   }]
   const contract = new ethers.Contract('0xb0897686c545045aFc77CF20eC7A532E3120E0F1', minAbi, provider)
-  const balance = await contract.balanceOf(aavegotchiDiamondAddress)
+  var balance = { _hex: 0 }
+  balance = await contract.balanceOf(aavegotchiDiamondAddress)
+    .catch((err) => {
+      console.log(err)
+    })
   return parseInt(balance._hex, 16) * 0.00000000000001
 }
 
@@ -49,7 +53,11 @@ async function getOpenPortalPricesAndRarity (blocksShown) {
   var dataArray = []
   var returnArray = []
   var promises = []
-  const results = await diamond.getERC721Listings(2, 'purchased', blocksShown.blocksShown)
+  var results = []
+  results = await diamond.getERC721Listings(2, 'purchased', blocksShown.blocksShown)
+    .catch((err) => {
+      console.log(err)
+    })
   for (var i = 0; i < results.length; i++) {
     dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16), rarity: 0, id: results[i].erc721TokenId._hex })
     const localItem = localStorage.getItem(JSON.stringify({ id: results[i].erc721TokenId._hex, category: 2 }))
@@ -97,8 +105,11 @@ async function getGotchiPricesAndRarity (blocksShown) {
   const diamond = getAavegotchiContract()
   var dataArray = []
   var promises = []
-  const results = await diamond.getERC721Listings(3, 'purchased', blocksShown.blocksShown)
-
+  var results = []
+  results = await diamond.getERC721Listings(3, 'purchased', blocksShown.blocksShown)
+    .catch((err) => {
+      console.log(err)
+    })
   for (var i = 0; i < results.length; i++) {
     dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16), rarity: 0 })
     const localItem = localStorage.getItem(JSON.stringify({ id: results[i].erc721TokenId._hex, category: 3 }))
@@ -110,23 +121,29 @@ async function getGotchiPricesAndRarity (blocksShown) {
     promises.push({ modifiedRarityScore: { _hex: localItem }, localStorage: true })
   }
 
-  await Promise.all(promises).then(values => {
+  await Promise.allSettled(promises).then(values => {
     for (var i = 0; i < values.length; i++) {
-      dataArray[i].rarity = parseInt(values[i].modifiedRarityScore._hex, 16)
-      if (values[i].localStorage !== true) {
-        localStorage.setItem(JSON.stringify({ id: values[i].tokenId._hex, category: 3 }), values[i].modifiedRarityScore._hex)
+      if (values[i].status === 'fulfilled') {
+        dataArray[i].rarity = parseInt(values[i].value.modifiedRarityScore._hex, 16)
+        if (values[i].value.localStorage !== true) {
+          localStorage.setItem(JSON.stringify({ id: values[i].value.tokenId._hex, category: 3 }), values[i].value.modifiedRarityScore._hex)
+        }
       }
     }
   })
+
   return dataArray
 }
-
 // Closed portals
 
 async function getClosedPortalPrices (blocksShown) {
   const diamond = getAavegotchiContract()
   var dataArray = []
-  const results = await diamond.getERC721Listings(0, 'purchased', blocksShown.blocksShown)
+  var results = []
+  results = await diamond.getERC721Listings(0, 'purchased', blocksShown.blocksShown)
+    .catch((err) => {
+      console.log(err)
+    })
   for (var i = 0; i < results.length; i++) {
     dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16) })
   }
@@ -135,7 +152,11 @@ async function getClosedPortalPrices (blocksShown) {
 
 async function getClosedPortalListings () {
   const diamond = getAavegotchiContract()
-  const listingInfo = await diamond.getERC721Listings(0, 'listed', 2000)
+  var listingInfo = []
+  listingInfo = await diamond.getERC721Listings(0, 'listed', 2000)
+    .catch((err) => {
+      console.log(err)
+    })
   var listings = []
   for (let i = 0; i < listingInfo.length; i++) {
     listings.push({ link: `https://aavegotchi.com/baazaar/erc721/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001 })
@@ -148,7 +169,11 @@ async function getClosedPortalListings () {
 
 async function getWearableListings (blocksShown) {
   const diamond = getAavegotchiContract()
-  const listingInfo = await diamond.getERC1155Listings(0, 'listed', blocksShown.blocksShown)
+  var listingInfo = []
+  listingInfo = await diamond.getERC1155Listings(0, 'listed', blocksShown.blocksShown)
+    .catch((err) => {
+      console.log(err)
+    })
   var listings = []
   for (let i = 0; i < listingInfo.length; i++) {
     listings.push({ link: `https://aavegotchi.com/baazaar/erc1155/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001, id: parseInt(listingInfo[i].erc1155TypeId._hex, 16), quantity: parseInt(listingInfo[i].quantity._hex, 16) })
@@ -159,8 +184,11 @@ async function getWearableListings (blocksShown) {
 
 async function getWearablePrices (blocksShown) {
   const diamond = getAavegotchiContract()
-  const wearablePriceList = await diamond.getERC1155Listings(0, 'purchased', blocksShown.blocksShown)
-
+  var wearablePriceList = []
+  wearablePriceList = await diamond.getERC1155Listings(0, 'purchased', blocksShown.blocksShown)
+    .catch((err) => {
+      console.log(err)
+    })
   var wearablePrices = []
   for (let i = 0; i < wearablePriceList.length; i++) {
     wearablePrices.push({ y: parseInt(wearablePriceList[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(wearablePriceList[i].timeLastPurchased._hex, 16), id: parseInt(wearablePriceList[i].erc1155TypeId._hex, 16) })
@@ -182,6 +210,9 @@ async function getWearableList () {
       }
     }
   })
+    .catch((err) => {
+      console.log(err)
+    })
   return wearables
 }
 
@@ -199,11 +230,18 @@ async function getConsumableList () {
       dataArray.push({ name: values[i].name, id: values[i].svgId, rarity: values[i].rarityScoreModifier, quantity: parseInt(values[i].totalQuantity._hex, 16) })
     }
   })
+    .catch((err) => {
+      console.log(err)
+    })
   return dataArray
 }
 async function getConsumableListings (blocksShown) {
   const diamond = getAavegotchiContract()
-  const listingInfo = await diamond.getERC1155Listings(2, 'listed', blocksShown.blocksShown)
+  var listingInfo = []
+  listingInfo = await diamond.getERC1155Listings(2, 'listed', blocksShown.blocksShown)
+    .catch((err) => {
+      console.log(err)
+    })
   var listings = []
   for (let i = 0; i < listingInfo.length; i++) {
     listings.push({ link: `https://aavegotchi.com/baazaar/erc1155/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001, id: parseInt(listingInfo[i].erc1155TypeId._hex, 16), quantity: parseInt(listingInfo[i].quantity._hex, 16) })
@@ -213,7 +251,11 @@ async function getConsumableListings (blocksShown) {
 }
 async function getConsumablePrices (blocksShown) {
   const diamond = getAavegotchiContract()
-  const consumablePriceList = await diamond.getERC1155Listings(2, 'purchased', blocksShown.blocksShown)
+  var consumablePriceList = []
+  consumablePriceList = await diamond.getERC1155Listings(2, 'purchased', blocksShown.blocksShown)
+    .catch((err) => {
+      console.log(err)
+    })
   var consumablePrices = []
   for (let i = 0; i < consumablePriceList.length; i++) {
     consumablePrices.push({ y: parseInt(consumablePriceList[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(consumablePriceList[i].timeLastPurchased._hex, 16), id: parseInt(consumablePriceList[i].erc1155TypeId._hex, 16) })
@@ -293,7 +335,6 @@ export default new Vuex.Store({
         commit('SET_GOTCHI_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
-        throw error
       })
     },
     fetchPortalGraph ({ commit }, blocksShown) {
@@ -301,7 +342,6 @@ export default new Vuex.Store({
         commit('SET_CLOSED_PORTAL_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
-        throw error
       })
     },
     fetchOpenPortalGraph ({ commit }, blocksShown) {
@@ -309,7 +349,6 @@ export default new Vuex.Store({
         commit('SET_OPEN_PORTAL_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
-        throw error
       })
     },
     fetchWearablesList ({ commit }) {
@@ -317,7 +356,6 @@ export default new Vuex.Store({
         commit('SET_WEARABLES_LIST', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
-        throw error
       })
     },
     fetchWearablesGraph ({ commit }, blocksShown) {
@@ -325,7 +363,6 @@ export default new Vuex.Store({
         commit('SET_WEARABLES_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
-        throw error
       })
     },
     fetchClosedPortalListing ({ commit }) {
@@ -341,7 +378,6 @@ export default new Vuex.Store({
         commit('SET_WEARABLES_LISTINGS', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
-        throw error
       })
     },
     fetchConsumablesList ({ commit }) {
@@ -349,7 +385,6 @@ export default new Vuex.Store({
         commit('SET_CONSUMABLES_LIST', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
-        throw error
       })
     },
     fetchConsumablesListing ({ commit }, blocksShown) {
@@ -357,7 +392,6 @@ export default new Vuex.Store({
         commit('SET_CONSUMABLES_LISTINGS', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
-        throw error
       })
     },
     fetchConsumablesGraph ({ commit }, blocksShown) {
@@ -365,7 +399,6 @@ export default new Vuex.Store({
         commit('SET_CONSUMABLES_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
-        throw error
       })
     },
     fetchClosedPortalQuantity ({ commit }) {
@@ -373,7 +406,6 @@ export default new Vuex.Store({
         commit('SET_CLOSED_PORTALS_QUANTITY', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
-        throw error
       })
     }
   }
