@@ -197,6 +197,7 @@ export default {
     },
 
     filterGraph (id) {
+      this.currentAxis = true
       this.priceForWearablesFiltered = this.priceForWearables.filter((x) => x.id === id)
       this.updateGraphComponent(`${this.wearableList.find((obj) => obj.id === id).name}`)
       this.wearablesListingsFiltered = this.wearablesListings.filter((x) => x.id === id)
@@ -288,6 +289,9 @@ export default {
               type: 'logarithmic',
               id: 'left-y-axis',
               ticks: {
+                beginAtZero: true,
+                autoSkip: false,
+                padding: 0,
                 callback: (value) => {
                   return this.currentAxis ? `$${value}` : `${value} GHST`
                 }
@@ -295,8 +299,8 @@ export default {
               afterBuildTicks: (chartObj) => {
                 var tickArray = []
                 tickArray.push(0)
-                for (var i = 1; i <= this.maxPrice; i *= 2) {
-                  tickArray.push(i)
+                for (var i = 1; i <= this.maxPrice; i *= 1.7) {
+                  tickArray.push(parseInt(i))
                 }
                 chartObj.ticks = tickArray
               },
