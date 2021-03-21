@@ -83,38 +83,20 @@ async function getOpenPortalPricesAndRarity () {
 
 // Gotchi
 
-async function getGotchiPricesAndRarity (blocksShown) {
-  const diamond = getAavegotchiContract()
-  var dataArray = []
-  var promises = []
-  var results = []
-  results = await diamond.getERC721Listings(3, 'purchased', blocksShown.blocksShown)
-    .catch((err) => {
-      console.log(err)
-    })
-  for (var i = 0; i < results.length; i++) {
-    dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16), rarity: 0 })
-    const localItem = localStorage.getItem(JSON.stringify({ id: results[i].erc721TokenId._hex, category: 3 }))
-    if (localItem === null || localItem === undefined) {
-      console.log('the key was not found in the cache')
-      promises.push(diamond.getAavegotchi(parseInt(results[i].erc721TokenId._hex, 16)))
-      continue
+async function getGotchiPricesAndRarity () {
+  const graphQuery = `{
+  erc721Listings(first:1000,orderDirection:desc,orderBy:timePurchased,where:{category:3,timePurchased_not:"0"})
+  {
+    priceInWei
+    timePurchased
+    gotchi{
+      modifiedRarityScore
     }
-    promises.push({ modifiedRarityScore: { _hex: localItem }, localStorage: true })
   }
-
-  await Promise.allSettled(promises).then(values => {
-    for (var i = 0; i < values.length; i++) {
-      if (values[i].status === 'fulfilled') {
-        dataArray[i].rarity = parseInt(values[i].value.modifiedRarityScore._hex, 16)
-        if (values[i].value.localStorage !== true) {
-          localStorage.setItem(JSON.stringify({ id: values[i].value.tokenId._hex, category: 3 }), values[i].value.modifiedRarityScore._hex)
-        }
-      }
-    }
-  })
-
-  return dataArray
+  }`
+  const gotchiPrices = await sendGraphRequest(graphQuery)
+    .catch((err) => { console.log(err) })
+  return gotchiPrices.data.erc721Listings
 }
 // Closed portals
 
@@ -324,8 +306,8 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    fetchGraph ({ commit }, blocksShown) {
-      return getGotchiPricesAndRarity(blocksShown).then(response => {
+    fetchGotchiGraph ({ commit }) {
+      return getGotchiPricesAndRarity().then(response => {
         commit('SET_GOTCHI_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
