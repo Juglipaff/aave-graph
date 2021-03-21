@@ -9,7 +9,7 @@
       <router-link to="/consumables">Consumables</router-link>
     </div>
     <vue-progress-bar></vue-progress-bar>
-    <router-view/>
+    <router-view :key="$route.fullPath"/>
   </div>
 </template>
 

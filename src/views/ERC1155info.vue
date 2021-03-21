@@ -1,5 +1,6 @@
 <template>
     <div class="container">
+
     <br>
      <div v-if="errors.length!==0">
       OOPS... Something went wrong... Check the console for more info<br>
@@ -8,23 +9,23 @@
       </div>
     </div>
     <button class="sort-button" v-on:click="nextSort">Sort: {{sortMethod}}</button>
-    <button class="switch_axis" v-on:click="switchYAxis()"> <div v-if="currentAxis">$</div><div v-else>GHST</div> </button>
+        <button class="switch_axis" v-on:click="switchYAxis()"> <div v-if="currentAxis">$</div><div v-else>GHST</div> </button>
     <br>
       <div class="wrapper">
-      <button v-for="wearable in wearableList" :class="{
-           common: wearable.rarityScoreModifier===1,
-           uncommon: wearable.rarityScoreModifier===2,
-           rare: wearable.rarityScoreModifier===5,
-           legendary: wearable.rarityScoreModifier===10,
-           mythical: wearable.rarityScoreModifier===20,
-           godlike:  wearable.rarityScoreModifier===50  }" :key="wearable.name" class="plate" v-on:click="filterGraph(wearable.id)">
-          <button class="favourite" v-on:click="toggleFavorite(wearable.id)"><font-awesome-icon  :class="getCurrentFavStatus(wearable.id)" :icon="['fas', 'star']"/></button>
-        <div class="item-name"><div class="rarity">{{returnRarityString(wearable.rarityScoreModifier)}} </div> <div class="name">{{wearable.name}}<br> Traded: {{returnLiquidityForItem(wearable.name)}} time(s)<br>Total Quantity: {{wearable.maxQuantity}}</div></div>
+      <button v-for="ERC1155 in ERC1155List" :class="{
+           common: ERC1155.rarityScoreModifier===1,
+           uncommon: ERC1155.rarityScoreModifier===2,
+           rare: ERC1155.rarityScoreModifier===5,
+           legendary: ERC1155.rarityScoreModifier===10,
+           mythical: ERC1155.rarityScoreModifier===20,
+           godlike:  ERC1155.rarityScoreModifier===50  }" :key="ERC1155.name" class="plate" v-on:click="filterGraph(ERC1155.id)">
+          <button class="favourite" v-on:click="toggleFavorite(ERC1155.id)"><font-awesome-icon  :class="getCurrentFavStatus(ERC1155.id)" :icon="['fas', 'star']"/></button>
+        <div class="item-name"><div class="rarity">{{returnRarityString(ERC1155.rarityScoreModifier)}} </div> <div class="name">{{ERC1155.name}}<br> Traded: {{returnLiquidityForItem(ERC1155.name)}} time(s)<br>Total Quantity: {{ERC1155.maxQuantity}}</div></div>
       </button>
    </div>
      <chart  v-bind:chartData="chartData" v-bind:options="options" class="chart"/>
      <div class="links-wrapper">
-      <a class="link" :href='`https://aavegotchi.com/baazaar/erc1155/${listing.id}`' v-for="listing in wearablesListingsFiltered" :key="listing.id" target="_blank">
+      <a class="link" :href='`https://aavegotchi.com/baazaar/erc1155/${listing.id}`' v-for="listing in ERC1155ListingsFiltered" :key="listing.id" target="_blank">
       {{parseInt(toEther(listing.priceInWei))}} GHST, ${{parseInt(toEther(listing.priceInWei)*currentPrice)}}, {{listing.quantity}} Item(s)<br>
      </a>
      </div>
@@ -45,14 +46,15 @@ function toDateTime (secs) {
 }
 
 export default {
+  props: { isWearable: Boolean },
   store,
-  name: 'Wearables',
+  name: 'ERC1155',
   components: { Chart },
   computed: {
     ...mapState({
-      wearableList: 'consumableList',
-      wearableGraph: 'consumablesGraph',
-      wearablesListings: 'consumablesListings',
+      ERC1155List: 'ERC1155List',
+      ERC1155Graph: 'ERC1155Graph',
+      ERC1155Listings: 'ERC1155Listings',
       errors: 'errors',
       GHSTprices: 'GHSTprices'
     })
@@ -61,11 +63,11 @@ export default {
     return {
       chartData: {},
       options: {},
-      priceForWearables: [],
+      priceForERC1155: [],
       prices: [],
       currentPrice: 0,
-      priceForWearablesFiltered: [],
-      wearablesListingsFiltered: [],
+      priceForERC1155Filtered: [],
+      ERC1155ListingsFiltered: [],
       sortMethod: 'Alphabetically',
       liquidity: [],
       currentAxis: true,
@@ -74,9 +76,9 @@ export default {
   },
 
   created () {
-    this.getWearablesList()
+    this.getERC1155List()
     this.updateGraph()
-    this.getWearablesListings()
+    this.getERC1155Listings()
   },
   methods: {
     toEther (wei) {
@@ -122,10 +124,10 @@ export default {
       var liquidityItem = this.liquidity.find((a) => a.name === name)
       return `${liquidityItem ? liquidityItem.liquidityValue : 0}`
     },
-    async getWearablesListings () {
-      await this.$store.dispatch('fetchConsumablesListing').then(() => {
-        console.log(`Listing length: ${this.wearablesListings.length}`)
-        this.wearablesListingsFiltered = this.wearablesListings.sort((a, b) => {
+    async getERC1155Listings () {
+      await this.$store.dispatch('fetchERC1155Listing', this.isWearable).then(() => {
+        console.log(`Listing length: ${this.ERC1155Listings.length}`)
+        this.ERC1155ListingsFiltered = this.ERC1155Listings.sort((a, b) => {
           if (ethers.BigNumber.from(a.priceInWei).lt(b.priceInWei)) {
             return -1
           }
@@ -133,11 +135,11 @@ export default {
         })
       })
     },
-    async getWearablesList () {
-      if (this.wearableList !== []) {
-        await this.$store.dispatch('fetchConsumablesList')
+    async getERC1155List () {
+      if (this.ERC1155List !== []) {
+        await this.$store.dispatch('fetchERC1155List', this.isWearable)
           .then(() => {
-            this.sortWearablesList()
+            this.sortERC1155List()
           })
       }
     },
@@ -151,11 +153,11 @@ export default {
       } else {
         this.sortMethod = 'Alphabetically'
       }
-      this.sortWearablesList()
+      this.sortERC1155List()
     },
-    sortWearablesList () {
+    sortERC1155List () {
       if (this.sortMethod === 'by Rarity') {
-        this.wearableList.sort((a, b) => {
+        this.ERC1155List.sort((a, b) => {
           if (a.rarityScoreModifier < b.rarityScoreModifier) {
             return 1
           } else if (a.rarityScoreModifier === b.rarityScoreModifier) {
@@ -167,7 +169,7 @@ export default {
           return -1
         })
       } else if (this.sortMethod === 'by Liquidity') {
-        this.wearableList.sort((a, b) => {
+        this.ERC1155List.sort((a, b) => {
           var item1LiquidityValue = parseInt(this.returnLiquidityForItem(a.name), 10)
           var item2LiquidityValue = parseInt(this.returnLiquidityForItem(b.name), 10)
           if (item1LiquidityValue < item2LiquidityValue) {
@@ -176,7 +178,7 @@ export default {
           return -1
         })
       } else if (this.sortMethod === 'Favourite') {
-        this.wearableList.sort((a, b) => {
+        this.ERC1155List.sort((a, b) => {
           var favItem1 = localStorage.getItem(a.id)
           var favItem2 = localStorage.getItem(b.id)
           if (favItem1 === 'true' && favItem2 === 'false') {
@@ -185,7 +187,7 @@ export default {
           return 1
         })
       } else {
-        this.wearableList.sort((a, b) => {
+        this.ERC1155List.sort((a, b) => {
           if (a.name < b.name) {
             return -1
           }
@@ -196,23 +198,23 @@ export default {
 
     filterGraph (id) {
       this.currentAxis = true
-      this.priceForWearablesFiltered = this.priceForWearables.filter((x) => x.id === id)
-      this.updateGraphComponent(`${this.wearableList.find((obj) => obj.id === id).name}`)
-      this.wearablesListingsFiltered = this.wearablesListings.filter((x) => x.erc1155TypeId === id)
+      this.priceForERC1155Filtered = this.priceForERC1155.filter((x) => x.id === id)
+      this.updateGraphComponent(`${this.ERC1155List.find((obj) => obj.id === id).name}`)
+      this.ERC1155ListingsFiltered = this.ERC1155Listings.filter((x) => x.erc1155TypeId === id)
     },
     getLiquidities () {
       this.liquidity = []
-      for (var i = 0; i < this.wearableList.length; i++) {
-        var itemLiquidityValue = this.priceForWearablesFiltered.filter((a) =>
-          this.wearableList[i].name === a.name
+      for (var i = 0; i < this.ERC1155List.length; i++) {
+        var itemLiquidityValue = this.priceForERC1155Filtered.filter((a) =>
+          this.ERC1155List[i].name === a.name
         ).length
-        this.liquidity.push({ name: this.wearableList[i].name, liquidityValue: itemLiquidityValue })
+        this.liquidity.push({ name: this.ERC1155List[i].name, liquidityValue: itemLiquidityValue })
       }
     },
     async updateGraph () {
       this.$Progress.start()
-      this.priceForWearables = []
-      await this.getWearablesListings()
+      this.priceForERC1155 = []
+      await this.getERC1155Listings()
       if (this.GHSTprices.length === 0) {
         await this.$store.dispatch('fetchGHSTPrices')
           .then(() => {
@@ -226,21 +228,21 @@ export default {
         this.prices = this.GHSTprices
       }
       this.currentPrice = this.prices[this.prices.length - 1][1]
-      await this.$store.dispatch('fetchConsumablesGraph')
+      await this.$store.dispatch('fetchERC1155Graph', this.isWearable)
         .then(() => {
-          for (var i = 0; i < this.wearableGraph.length; i++) {
-            const day = Math.floor(this.wearableGraph[i].timeLastPurchased / 86400) * 86400
+          for (var i = 0; i < this.ERC1155Graph.length; i++) {
+            const day = Math.floor(this.ERC1155Graph[i].timeLastPurchased / 86400) * 86400
             const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-            this.priceForWearables.push({ x: toDateTime(this.wearableGraph[i].timeLastPurchased), y: parseInt(ethers.utils.formatEther(this.wearableGraph[i].priceInWei) * (price ? price[1] : this.currentPrice)), GHST: parseInt(ethers.utils.formatEther(this.wearableGraph[i].priceInWei)), id: this.wearableGraph[i].erc1155TypeId, name: this.wearableList.find((obj) => obj.id === this.wearableGraph[i].erc1155TypeId).name })
-            if (this.priceForWearables[i].y > this.maxPrice) {
-              this.maxPrice = this.priceForWearables[i].y
+            this.priceForERC1155.push({ x: toDateTime(this.ERC1155Graph[i].timeLastPurchased), y: parseInt(ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei) * (price ? price[1] : this.currentPrice)), GHST: parseInt(ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei)), id: this.ERC1155Graph[i].erc1155TypeId, name: this.ERC1155List.find((obj) => obj.id === this.ERC1155Graph[i].erc1155TypeId).name })
+            if (this.priceForERC1155[i].y > this.maxPrice) {
+              this.maxPrice = this.priceForERC1155[i].y
             }
           }
           this.currentAxis = true
-          this.priceForWearablesFiltered = this.priceForWearables
+          this.priceForERC1155Filtered = this.priceForERC1155
           this.getLiquidities()
-          this.updateGraphComponent('Consumable Prices')
-          this.sortWearablesList()
+          this.updateGraphComponent(this.isWearable ? 'Wearables Prices' : 'Consumables Prices')
+          this.sortERC1155List()
           this.$Progress.finish()
         }).catch(() => {
           this.$Progress.finish()
@@ -249,15 +251,15 @@ export default {
     switchYAxis () {
       if (this.chartData.datasets[0] !== undefined) {
         this.currentAxis = !this.currentAxis
-        for (var i = 0; i < this.priceForWearablesFiltered.length; i++) {
-          this.priceForWearablesFiltered[i] = { x: this.priceForWearablesFiltered[i].x, y: this.priceForWearablesFiltered[i].GHST, GHST: this.priceForWearablesFiltered[i].y, id: this.priceForWearablesFiltered[i].id, name: this.priceForWearablesFiltered[i].name }
+        for (var i = 0; i < this.priceForERC1155Filtered.length; i++) {
+          this.priceForERC1155Filtered[i] = { x: this.priceForERC1155Filtered[i].x, y: this.priceForERC1155Filtered[i].GHST, GHST: this.priceForERC1155Filtered[i].y, id: this.priceForERC1155Filtered[i].id, name: this.priceForERC1155Filtered[i].name }
         }
         this.chartData = {
           type: 'scatter',
           datasets: [
             {
               label: this.chartData.datasets[0].label,
-              data: this.priceForWearablesFiltered,
+              data: this.priceForERC1155Filtered,
               fill: this.chartData.datasets[0].fill,
               borderColor: this.chartData.datasets[0].borderColor,
               borderWidth: this.chartData.datasets[0].borderWidth,
@@ -274,7 +276,7 @@ export default {
         datasets: [
           {
             label: label,
-            data: this.priceForWearablesFiltered,
+            data: this.priceForERC1155Filtered,
             fill: false,
             borderColor: '#0088cc',
             borderWidth: 4,

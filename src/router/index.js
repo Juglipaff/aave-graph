@@ -4,8 +4,8 @@ import Gotchi from '../views/Gotchi.vue'
 import ClosedPortals from '../views/ClosedPortals.vue'
 import ClosedPortalsBazaar from '../views/ClosedPortalsBazaar.vue'
 import OpenPortals from '../views/OpenPortals.vue'
-import Wearables from '../views/Wearables.vue'
-import Consumables from '../views/Consumables.vue'
+import ERC1155 from '../views/ERC1155info.vue'
+// import Consumables from '../views/Consumables.vue'
 
 Vue.use(VueRouter)
 
@@ -33,12 +33,14 @@ const routes = [
   {
     path: '/wearables',
     name: 'Wearables',
-    component: Wearables
+    component: ERC1155,
+    props: { isWearable: true }
   },
   {
     path: '/consumables',
     name: 'Consumables',
-    component: Consumables
+    component: ERC1155,
+    props: { isWearable: false }
   },
   {
     path: '*',

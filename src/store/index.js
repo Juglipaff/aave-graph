@@ -145,94 +145,55 @@ async function getERC1155List () {
   }
   return JSON.parse(sessionItem)
 }
-// Wearable items
-async function getWearablePrices () {
+async function getERC1155Prices (isWearable) {
   const graphQuery = `{
-    erc1155Listings(first: 1000, orderBy:timeLastPurchased,orderDirection: desc,where:{category:"0",sold:true}) {
+    erc1155Listings(first: 1000, orderBy:timeLastPurchased,orderDirection: desc,where:{category:"${isWearable ? 0 : 2}",sold:true}) {
       priceInWei
       timeLastPurchased
       erc1155TypeId
     }
   }`
-  const wearablePriceList = await sendGraphRequest(graphQuery)
+  const ERC1155PriceList = await sendGraphRequest(graphQuery)
     .catch((err) => { console.log(err) })
-  return wearablePriceList.data.erc1155Listings
+  return ERC1155PriceList.data.erc1155Listings
 }
 
-async function getWearableListings () {
+async function getERC1155Listings (isWearable) {
   const graphQuery = `{
-    erc1155Listings(first: 1000, where:{category:"0", cancelled:false, sold:false}) {
+    erc1155Listings(first: 1000, where:{category:"${isWearable ? 0 : 2}", cancelled:false, sold:false}) {
       priceInWei
       id
       erc1155TypeId
       quantity
     }
   }`
-  const wearableListings = await sendGraphRequest(graphQuery)
+  const ERC1155Listings = await sendGraphRequest(graphQuery)
     .catch((err) => { console.log(err) })
-  return wearableListings.data.erc1155Listings
+  return ERC1155Listings.data.erc1155Listings
 }
 
-async function getWearableList () {
+async function getERC1155FilteredList (isWearable) {
   const ERC1155List = await getERC1155List()
     .catch((err) => {
       console.log(err)
     })
-  var consumableIds = []
-  var consumableList = []
-  for (let i = 0; i < 126; i++) {
-    consumableIds.push(i)
+  var ERC1155Ids = []
+  var ERC1155ReturnList = []
+  if (isWearable) {
+    for (let i = 0; i < 126; i++) {
+      ERC1155Ids.push(i)
+    }
+  } else {
+    for (let i = 126; i < 130; i++) {
+      ERC1155Ids.push(i)
+    }
   }
   for (let i = 0; i < ERC1155List.length; i++) {
-    if (consumableIds.some((a) => parseInt(ERC1155List[i].id) === a)) {
-      consumableList.push(ERC1155List[i])
+    if (ERC1155Ids.some((a) => parseInt(ERC1155List[i].id) === a)) {
+      ERC1155ReturnList.push(ERC1155List[i])
     }
   }
-  return consumableList
-}
-
-// Consumable items
-async function getConsumableList () {
-  const ERC1155List = await getERC1155List()
-    .catch((err) => {
-      console.log(err)
-    })
-  var consumableIds = []
-  var consumableList = []
-  for (let i = 126; i < 130; i++) {
-    consumableIds.push(i)
-  }
-  for (let i = 0; i < ERC1155List.length; i++) {
-    if (consumableIds.some((a) => parseInt(ERC1155List[i].id) === a)) {
-      consumableList.push(ERC1155List[i])
-    }
-  }
-  return consumableList
-}
-async function getConsumableListings () {
-  const graphQuery = `{
-    erc1155Listings(first: 1000, where:{category:"2", cancelled:false, sold:false}) {
-      priceInWei
-      id
-      erc1155TypeId
-      quantity
-    }
-  }`
-  const consumableListings = await sendGraphRequest(graphQuery)
-    .catch((err) => { console.log(err) })
-  return consumableListings.data.erc1155Listings
-}
-async function getConsumablePrices () {
-  const graphQuery = `{
-    erc1155Listings(first: 1000,orderBy:timeLastPurchased,orderDirection: desc, where:{category:"2",sold:true}) {
-      priceInWei
-      timeLastPurchased
-      erc1155TypeId
-    }
-  }`
-  const consumablePriceList = await sendGraphRequest(graphQuery)
-    .catch((err) => { console.log(err) })
-  return consumablePriceList.data.erc1155Listings
+  return ERC1155ReturnList
 }
 
 Vue.use(Vuex)
@@ -243,12 +204,9 @@ export default new Vuex.Store({
     closedPortalGraph: [],
     openPortalGraph: [],
     closedPortalListings: [],
-    wearableList: [],
-    wearableGraph: [],
-    wearablesListings: [],
-    consumableList: [],
-    consumablesListings: [],
-    consumablesGraph: [],
+    ERC1155List: [],
+    ERC1155Graph: [],
+    ERC1155Listings: [],
     GHSTprices: [],
     closedPortalsQuantity: 0,
     errors: []
@@ -270,28 +228,16 @@ export default new Vuex.Store({
       state.closedPortalListings = listingData
       state.errors = []
     },
-    SET_WEARABLES_LIST (state, wearableList) {
-      state.wearableList = wearableList
+    SET_ERC1155_LIST (state, ERC1155List) {
+      state.ERC1155List = ERC1155List
       state.errors = []
     },
-    SET_WEARABLES_GRAPH (state, wearableGraph) {
-      state.wearableGraph = wearableGraph
+    SET_ERC1155_GRAPH (state, ERC1155Graph) {
+      state.ERC1155Graph = ERC1155Graph
       state.errors = []
     },
-    SET_WEARABLES_LISTINGS (state, listingData) {
-      state.wearablesListings = listingData
-      state.errors = []
-    },
-    SET_CONSUMABLES_LIST (state, consumableList) {
-      state.consumableList = consumableList
-      state.errors = []
-    },
-    SET_CONSUMABLES_LISTINGS (state, listingData) {
-      state.consumablesListings = listingData
-      state.errors = []
-    },
-    SET_CONSUMABLES_GRAPH (state, consumableGraph) {
-      state.consumablesGraph = consumableGraph
+    SET_ERC1155_LISTINGS (state, listingData) {
+      state.ERC1155Listings = listingData
       state.errors = []
     },
     SET_CLOSED_PORTALS_QUANTITY (state, Balance) {
@@ -328,16 +274,16 @@ export default new Vuex.Store({
         commit('SET_ERRORS', error)
       })
     },
-    fetchWearablesList ({ commit }) {
-      return getWearableList().then(response => {
-        commit('SET_WEARABLES_LIST', response)
+    fetchERC1155List ({ commit }, isWearable) {
+      return getERC1155FilteredList(isWearable).then(response => {
+        commit('SET_ERC1155_LIST', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
       })
     },
-    fetchWearablesGraph ({ commit }) {
-      return getWearablePrices().then(response => {
-        commit('SET_WEARABLES_GRAPH', response)
+    fetchERC1155Graph ({ commit }, isWearable) {
+      return getERC1155Prices(isWearable).then(response => {
+        commit('SET_ERC1155_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
       })
@@ -350,30 +296,9 @@ export default new Vuex.Store({
         throw error
       })
     },
-    fetchWearablesListing ({ commit }) {
-      return getWearableListings().then(response => {
-        commit('SET_WEARABLES_LISTINGS', response)
-      }).catch(error => {
-        commit('SET_ERRORS', error)
-      })
-    },
-    fetchConsumablesList ({ commit }) {
-      return getConsumableList().then(response => {
-        commit('SET_CONSUMABLES_LIST', response)
-      }).catch(error => {
-        commit('SET_ERRORS', error)
-      })
-    },
-    fetchConsumablesListing ({ commit }) {
-      return getConsumableListings().then(response => {
-        commit('SET_CONSUMABLES_LISTINGS', response)
-      }).catch(error => {
-        commit('SET_ERRORS', error)
-      })
-    },
-    fetchConsumablesGraph ({ commit }) {
-      return getConsumablePrices().then(response => {
-        commit('SET_CONSUMABLES_GRAPH', response)
+    fetchERC1155Listing ({ commit }, isWearable) {
+      return getERC1155Listings(isWearable).then(response => {
+        commit('SET_ERC1155_LISTINGS', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
       })
