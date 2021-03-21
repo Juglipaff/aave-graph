@@ -3,7 +3,6 @@ import { ethers } from 'ethers'
 
 import Vue from 'vue'
 import Vuex from 'vuex'
-import abi from '@/diamond.json'
 import axios from 'axios'
 
 async function sendGraphRequest (graphQuery) {
@@ -53,13 +52,6 @@ async function getClosedPortalsQuantity () {
   return parseInt(balance._hex, 16) * 0.00000000000001
 }
 
-function getAavegotchiContract () {
-  const aavegotchiDiamondAddress = '0x86935F11C86623deC8a25696E1C19a8659CbF95d'
-  const provider = new ethers.providers.JsonRpcProvider('https://rpc-mainnet.matic.network/')
-  const diamond = new ethers.Contract(aavegotchiDiamondAddress, abi, provider)
-  return diamond
-}
-
 // Open portals
 
 async function getOpenPortalPricesAndRarity () {
@@ -100,33 +92,30 @@ async function getGotchiPricesAndRarity () {
 }
 // Closed portals
 
-async function getClosedPortalPrices (blocksShown) {
-  const diamond = getAavegotchiContract()
-  var dataArray = []
-  var results = []
-  results = await diamond.getERC721Listings(0, 'purchased', blocksShown.blocksShown)
-    .catch((err) => {
-      console.log(err)
-    })
-  for (var i = 0; i < results.length; i++) {
-    dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16) })
-  }
-  return dataArray
+async function getClosedPortalPrices () {
+  const graphQuery = `{
+    erc721Listings(first:1000,orderDirection:desc,orderBy:timePurchased,where:{category:0,timePurchased_not:"0"})
+    {
+      priceInWei
+      timePurchased
+    }
+    }`
+  const closedPortalPrices = await sendGraphRequest(graphQuery)
+    .catch((err) => { console.log(err) })
+  return closedPortalPrices.data.erc721Listings
 }
 
 async function getClosedPortalListings () {
-  const diamond = getAavegotchiContract()
-  var listingInfo = []
-  listingInfo = await diamond.getERC721Listings(0, 'listed', 2000)
-    .catch((err) => {
-      console.log(err)
-    })
-  var listings = []
-  for (let i = 0; i < listingInfo.length; i++) {
-    listings.push({ link: `https://aavegotchi.com/baazaar/erc721/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001 })
-  }
-  console.log(`Listing length: ${listings.length} items`)
-  return listings
+  const graphQuery = `{
+    erc721Listings(first:1000,orderDirection:desc,orderBy:timePurchased,where:{category:0,timePurchased:"0",cancelled:false})
+    {
+      priceInWei
+      id
+    }
+  }`
+  const closedPortalListings = await sendGraphRequest(graphQuery)
+    .catch((err) => { console.log(err) })
+  return closedPortalListings.data.erc721Listings
 }
 
 // ERC1155
@@ -313,8 +302,8 @@ export default new Vuex.Store({
         commit('SET_ERRORS', error)
       })
     },
-    fetchPortalGraph ({ commit }, blocksShown) {
-      return getClosedPortalPrices(blocksShown).then(response => {
+    fetchPortalGraph ({ commit }) {
+      return getClosedPortalPrices().then(response => {
         commit('SET_CLOSED_PORTAL_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)

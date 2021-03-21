@@ -50,12 +50,10 @@ export default {
         'rgba(100, 230, 230, 255)'
       ],
       prices: [],
-      blocksShown: 500,
       rarityLow: 0,
       rarityHigh: 0,
       currentPrice: 0,
       isRarityTurnedOn: false,
-      // maxPrice: 0,
       pricesForOpenPortalsArrays: []
 
     }
@@ -91,13 +89,8 @@ export default {
                 maxBRS = BRS
               }
             }
-            // if (this.openPortalGraph[i].y > this.maxPrice) {
-            //   this.maxPrice = parseInt(this.openPortalGraph[i].y)
-            //  }
-            // this.colorArray.push(`${lerpColor('#100000', '#ff0000', Math.min(Math.max((-1800 + this.graphs[i].rarity * 4.5) / 1000), 1), 0)}`)
             const day = Math.floor(this.openPortalGraph[i].timePurchased / 86400) * 86400
             const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-            // this.priceForGotchi.push({ x: toDateTime(this.graphs[i].x), y: this.graphs[i].y * (price ? price[1] : this.currentPrice) })
             const pointObj = { x: toDateTime(this.openPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.openPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice), rarity: maxBRS, GHST: ethers.utils.formatEther(this.openPortalGraph[i].priceInWei) }
             if (!this.isRarityTurnedOn) {
               if (maxBRS < 420) {
@@ -149,8 +142,6 @@ export default {
                   type: 'logarithmic',
                   id: 'left-y-axis',
                   ticks: {
-
-                    //  max: this.maxPrice,
                     callback: (value) => {
                       return `$${value}`
                     }
@@ -228,18 +219,6 @@ export default {
             responsive: true,
             responsiveAnimationDuration: 0,
             maintainAspectRatio: false
-            /* plugins: {
-              zoom: {
-                pan: {
-                  enabled: true,
-                  mode: 'x'
-                },
-                zoom: {
-                  enabled: true,
-                  mode: 'x'
-                }
-              }
-            } */
           }
 
           this.$Progress.finish()

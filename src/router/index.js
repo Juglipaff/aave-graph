@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Gotchi from '../views/Gotchi.vue'
-import Portals from '../views/Portals.vue'
+import ClosedPortals from '../views/ClosedPortals.vue'
 import ClosedPortalsBazaar from '../views/ClosedPortalsBazaar.vue'
 import OpenPortals from '../views/OpenPortals.vue'
 import Wearables from '../views/Wearables.vue'
@@ -17,8 +17,8 @@ const routes = [
   },
   {
     path: '/closed-portals',
-    name: 'Portals',
-    component: Portals
+    name: 'ClosedPortals',
+    component: ClosedPortals
   },
   {
     path: '/closed-portals-bazaar',

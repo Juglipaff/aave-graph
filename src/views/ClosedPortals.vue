@@ -1,9 +1,6 @@
 <template>
   <div class="container">
-     {{blocksShown}}  <br>
-    Points shown:
-    10 <input v-model="blocksShown" type="range" min="10" max="1700" cls="slider"> 1700
-    <button v-on:click="updateGraph">Update</button>
+     Closed portals left: {{closedPortalsQuantity}}
     <div v-if="errors.length!==0">
       OOPS... Something went wrong... Check the console for more info<br>
       <div v-for="error in errors" :key="error.message">
@@ -19,6 +16,7 @@ import { mapState } from 'vuex'
 import store from '../store/index.js'
 import Chart from '../components/Chart.vue'
 import axios from 'axios'
+import { ethers } from 'ethers'
 
 function toDateTime (secs) {
   const t = new Date(1970, 0, 1)
@@ -33,6 +31,7 @@ export default {
   name: 'ClosedPortals',
   computed: {
     ...mapState({
+      closedPortalsQuantity: 'closedPortalsQuantity',
       closedPortalGraph: 'closedPortalGraph',
       errors: 'errors'
     })
@@ -42,17 +41,15 @@ export default {
       chartData: {},
       options: {},
       priceForClosedPortals: [],
-      blocksShown: 500,
       prices: [],
       currentPrice: 0
-      // maxPrice: 0
     }
   },
   methods: {
     async updateGraph () {
       this.priceForClosedPortals = []
       this.$Progress.start()
-
+      this.$store.dispatch('fetchClosedPortalQuantity')
       await axios.get('https://api.coingecko.com/api/v3/coins/aavegotchi/market_chart?vs_currency=usd&days=max&interval=daily')
         .then((response) => {
           console.log('got coingecko response')
@@ -62,14 +59,11 @@ export default {
         .catch((error) => {
           console.log(error)
         })
-      await this.$store.dispatch('fetchPortalGraph', { blocksShown: this.blocksShown }).then(() => {
+      await this.$store.dispatch('fetchPortalGraph').then(() => {
         for (var i = 0; i < this.closedPortalGraph.length; i++) {
-          const day = Math.floor(this.closedPortalGraph[i].x / 86400) * 86400
+          const day = Math.floor(this.closedPortalGraph[i].timePurchased / 86400) * 86400
           const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-          this.priceForClosedPortals.push({ x: toDateTime(this.closedPortalGraph[i].x), y: this.closedPortalGraph[i].y * (price ? price[1] : this.currentPrice) })
-          /*   if (this.closedPortalGraph[i].y > this.maxPrice) {
-            this.maxPrice = parseInt(this.closedPortalGraph[i].y)
-          } */
+          this.priceForClosedPortals.push({ x: toDateTime(this.closedPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice) })
         }
 
         this.chartData = {
@@ -152,7 +146,7 @@ export default {
               afterLabel: (tooltipItem) => {
                 const label = ['NFT price: ',
                   `$${parseInt(tooltipItem.yLabel)}`,
-                  `${parseInt(this.closedPortalGraph[tooltipItem.index].y)} GHST`
+                  `${parseInt(ethers.utils.formatEther(this.closedPortalGraph[tooltipItem.index].priceInWei))} GHST`
                 ]
                 return label
               }

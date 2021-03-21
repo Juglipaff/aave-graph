@@ -3,7 +3,7 @@
      Closed portals left: {{closedPortalsQuantity}}
       <button v-on:click="sortPortals">Sort</button> <br>
   <div v-for="listing in closedPortalListings" :key="listing.link" >
-   {{parseInt(listing.price)}} GHST, ${{parseInt(listing.price*price)}} - <a target="_blank" :href="listing.link">{{listing.link}}</a><br>
+   {{fromWei(listing.priceInWei)}} GHST, ${{parseInt(fromWei(listing.priceInWei)*price)}} - <a target="_blank" :href="`https://aavegotchi.com/baazaar/erc721/${listing.id}`">{{`https://aavegotchi.com/baazaar/erc721/${listing.id}`}}</a><br>
   </div>
     </div>
 </template>
@@ -11,6 +11,7 @@
 <script>
 
 import { mapState } from 'vuex'
+import { ethers } from 'ethers'
 import store from '../store/index.js'
 import axios from 'axios'
 export default {
@@ -40,29 +41,23 @@ export default {
       })
     this.$store.dispatch('fetchClosedPortalListing')
       .then(() => {
-        this.closedPortalListings.sort((a, b) => a.price - b.price)
+        console.log(`Listing length: ${this.closedPortalListings.length}`)
+        this.sortPortals()
         this.$Progress.finish()
       })
     this.$store.dispatch('fetchClosedPortalQuantity')
   },
   methods: {
+    fromWei (wei) {
+      return parseInt(ethers.utils.formatEther(wei))
+    },
     sortPortals () {
-      if (this.sort) {
-        this.sort = !this.sort
-        this.closedPortalListings.sort((a, b) => {
-          if (b.price < a.price) {
-            return -1
-          }
-          return 1
-        })
-        return
-      }
       this.sort = !this.sort
       this.closedPortalListings.sort((a, b) => {
-        if (a.price < b.price) {
-          return -1
+        if (this.fromWei(b.priceInWei) < this.fromWei(a.priceInWei)) {
+          return this.sort ? -1 : 1
         }
-        return 1
+        return this.sort ? 1 : -1
       })
     }
   }

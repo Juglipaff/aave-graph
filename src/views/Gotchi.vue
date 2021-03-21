@@ -53,12 +53,10 @@ export default {
         'rgba(100, 230, 230, 255)'
       ],
       prices: [],
-      blocksShown: 100,
       rarityLow: 0,
       rarityHigh: 0,
       currentPrice: 0,
       isRarityTurnedOn: false,
-      // maxPrice: 0,
       priceForGotchisArrays: []
 
     }
