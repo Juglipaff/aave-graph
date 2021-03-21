@@ -4,6 +4,20 @@ import { ethers } from 'ethers'
 import Vue from 'vue'
 import Vuex from 'vuex'
 import abi from '@/diamond.json'
+import axios from 'axios'
+
+async function sendGraphRequest (graphQuery) {
+  const result = await axios({
+    url: 'https://api.thegraph.com/subgraphs/name/aavegotchi/aavegotchi-core-matic',
+    method: 'post',
+    data: {
+      query: graphQuery
+    }
+  }).catch((error) => {
+    console.log(error)
+  })
+  return result.data
+}
 
 async function getClosedPortalsQuantity () {
   const aavegotchiDiamondAddress = '0x86935F11C86623deC8a25696E1C19a8659CbF95d'
@@ -48,55 +62,23 @@ function getAavegotchiContract () {
 
 // Open portals
 
-async function getOpenPortalPricesAndRarity (blocksShown) {
-  const diamond = getAavegotchiContract()
-  var dataArray = []
-  var returnArray = []
-  var promises = []
-  var results = []
-  results = await diamond.getERC721Listings(2, 'purchased', blocksShown.blocksShown)
-    .catch((err) => {
-      console.log(err)
-    })
-  for (var i = 0; i < results.length; i++) {
-    dataArray.push({ y: parseInt(results[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(results[i].timePurchased._hex, 16), rarity: 0, id: results[i].erc721TokenId._hex })
-    const localItem = localStorage.getItem(JSON.stringify({ id: results[i].erc721TokenId._hex, category: 2 }))
-    if (localItem === null || localItem === undefined) {
-      console.log('the key was not found in the cache')
-      promises.push(diamond.portalAavegotchiTraits(parseInt(results[i].erc721TokenId._hex, 16)))
-      continue
-    }
-    promises.push({ value: localItem, localStorage: true })
-  }
-
-  await Promise.allSettled(promises).then(values => {
-    for (var i = 0; i < values.length; i++) {
-      if (values[i].status === 'fulfilled') {
-        if (values[i].value.localStorage === true) {
-          if (values[i].value.value !== '0') {
-            returnArray.push({ y: dataArray[i].y, x: dataArray[i].x, rarity: values[i].value.value })
-          }
-          continue
+async function getOpenPortalPricesAndRarity () {
+  const graphQuery = `{
+    erc721Listings(first:1000,orderDirection:desc,orderBy:timePurchased,where:{category:2,timePurchased_not:"0"})
+    {
+      priceInWei
+      timePurchased
+      tokenId
+      portal{
+        options{
+          numericTraits
         }
-        var maxBRS = 0
-        for (var n = 0; n < values[i].value.length; n++) {
-          var BRS = 0
-          for (var k = 0; k < 6; k++) {
-            const traitValue = values[i].value[n].numericTraits[k]
-            BRS += traitValue >= 50 ? traitValue : 100 - traitValue
-          }
-          if (maxBRS < BRS) {
-            maxBRS = BRS
-          }
-        }
-        returnArray.push({ y: dataArray[i].y, x: dataArray[i].x, rarity: maxBRS })
-        localStorage.setItem(JSON.stringify({ id: dataArray[i].id, category: 2 }), maxBRS)
-        continue
       }
-      localStorage.setItem(JSON.stringify({ id: dataArray[i].id, category: 2 }), 0)
     }
-  })
-  return returnArray
+    }`
+  const openPortalsPrices = await sendGraphRequest(graphQuery)
+    .catch((err) => { console.log(err) })
+  return openPortalsPrices.data.erc721Listings
 }
 
 // Gotchi
@@ -165,102 +147,114 @@ async function getClosedPortalListings () {
   return listings
 }
 
-// Wearable items
+// ERC1155
 
-async function getWearableListings (blocksShown) {
-  const diamond = getAavegotchiContract()
-  var listingInfo = []
-  listingInfo = await diamond.getERC1155Listings(0, 'listed', blocksShown.blocksShown)
-    .catch((err) => {
-      console.log(err)
-    })
-  var listings = []
-  for (let i = 0; i < listingInfo.length; i++) {
-    listings.push({ link: `https://aavegotchi.com/baazaar/erc1155/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001, id: parseInt(listingInfo[i].erc1155TypeId._hex, 16), quantity: parseInt(listingInfo[i].quantity._hex, 16) })
+async function getERC1155List () {
+  const sessionItem = sessionStorage.getItem('ERC1155')
+  if (sessionItem === null || sessionItem === undefined) {
+    const graphQuery = `{
+    itemTypes(first:1000) {
+      name
+      id
+      rarityScoreModifier
+      maxQuantity
+    }
+  }`
+    const list = await sendGraphRequest(graphQuery)
+      .catch((err) => { console.log(err) })
+    sessionStorage.setItem('ERC1155', JSON.stringify(list.data.itemTypes))
+    return list.data.itemTypes
   }
-  console.log(`Listing length: ${listings.length} items`)
-  return listings
+  return JSON.parse(sessionItem)
+}
+// Wearable items
+async function getWearablePrices () {
+  const graphQuery = `{
+    erc1155Listings(first: 1000, orderBy:timeLastPurchased,orderDirection: desc,where:{category:"0",sold:true}) {
+      priceInWei
+      timeLastPurchased
+      erc1155TypeId
+    }
+  }`
+  const wearablePriceList = await sendGraphRequest(graphQuery)
+    .catch((err) => { console.log(err) })
+  return wearablePriceList.data.erc1155Listings
 }
 
-async function getWearablePrices (blocksShown) {
-  const diamond = getAavegotchiContract()
-  var wearablePriceList = []
-  wearablePriceList = await diamond.getERC1155Listings(0, 'purchased', blocksShown.blocksShown)
-    .catch((err) => {
-      console.log(err)
-    })
-  var wearablePrices = []
-  for (let i = 0; i < wearablePriceList.length; i++) {
-    wearablePrices.push({ y: parseInt(wearablePriceList[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(wearablePriceList[i].timeLastPurchased._hex, 16), id: parseInt(wearablePriceList[i].erc1155TypeId._hex, 16) })
-  }
-  return wearablePrices
+async function getWearableListings () {
+  const graphQuery = `{
+    erc1155Listings(first: 1000, where:{category:"0", cancelled:false, sold:false}) {
+      priceInWei
+      id
+      erc1155TypeId
+      quantity
+    }
+  }`
+  const wearableListings = await sendGraphRequest(graphQuery)
+    .catch((err) => { console.log(err) })
+  return wearableListings.data.erc1155Listings
 }
 
 async function getWearableList () {
-  const diamond = getAavegotchiContract()
-  var items = []
-  var wearables = []
-  for (var k = 0; k <= 125; k++) {
-    items.push(k)
-  }
-  await diamond.getItemTypes(items).then((values) => {
-    for (var i = 0; i < values.length; i++) {
-      if (!wearables.some(obj => obj.name === values[i].name && obj.id === values[i].svgId)) {
-        wearables.push({ name: values[i].name, id: values[i].svgId, rarity: values[i].rarityScoreModifier, quantity: parseInt(values[i].totalQuantity._hex, 16) })
-      }
-    }
-  })
+  const ERC1155List = await getERC1155List()
     .catch((err) => {
       console.log(err)
     })
-  return wearables
+  var consumableIds = []
+  var consumableList = []
+  for (let i = 0; i < 126; i++) {
+    consumableIds.push(i)
+  }
+  for (let i = 0; i < ERC1155List.length; i++) {
+    if (consumableIds.some((a) => parseInt(ERC1155List[i].id) === a)) {
+      consumableList.push(ERC1155List[i])
+    }
+  }
+  return consumableList
 }
 
 // Consumable items
-
 async function getConsumableList () {
-  const diamond = getAavegotchiContract()
-  var items = []
-  var dataArray = []
-  for (var i = 126; i < 130; i++) {
-    items.push(i)
+  const ERC1155List = await getERC1155List()
+    .catch((err) => {
+      console.log(err)
+    })
+  var consumableIds = []
+  var consumableList = []
+  for (let i = 126; i < 130; i++) {
+    consumableIds.push(i)
   }
-  await diamond.getItemTypes(items).then((values) => {
-    for (var i = 0; i < values.length; i++) {
-      dataArray.push({ name: values[i].name, id: values[i].svgId, rarity: values[i].rarityScoreModifier, quantity: parseInt(values[i].totalQuantity._hex, 16) })
+  for (let i = 0; i < ERC1155List.length; i++) {
+    if (consumableIds.some((a) => parseInt(ERC1155List[i].id) === a)) {
+      consumableList.push(ERC1155List[i])
     }
-  })
-    .catch((err) => {
-      console.log(err)
-    })
-  return dataArray
-}
-async function getConsumableListings (blocksShown) {
-  const diamond = getAavegotchiContract()
-  var listingInfo = []
-  listingInfo = await diamond.getERC1155Listings(2, 'listed', blocksShown.blocksShown)
-    .catch((err) => {
-      console.log(err)
-    })
-  var listings = []
-  for (let i = 0; i < listingInfo.length; i++) {
-    listings.push({ link: `https://aavegotchi.com/baazaar/erc1155/${parseInt(listingInfo[i].listingId._hex)}`, price: parseInt(listingInfo[i].priceInWei._hex) * 0.000000000000000001, id: parseInt(listingInfo[i].erc1155TypeId._hex, 16), quantity: parseInt(listingInfo[i].quantity._hex, 16) })
   }
-  console.log(`Listing length: ${listings.length} items`)
-  return listings
+  return consumableList
 }
-async function getConsumablePrices (blocksShown) {
-  const diamond = getAavegotchiContract()
-  var consumablePriceList = []
-  consumablePriceList = await diamond.getERC1155Listings(2, 'purchased', blocksShown.blocksShown)
-    .catch((err) => {
-      console.log(err)
-    })
-  var consumablePrices = []
-  for (let i = 0; i < consumablePriceList.length; i++) {
-    consumablePrices.push({ y: parseInt(consumablePriceList[i].priceInWei._hex, 16) * 0.000000000000000001, x: parseInt(consumablePriceList[i].timeLastPurchased._hex, 16), id: parseInt(consumablePriceList[i].erc1155TypeId._hex, 16) })
-  }
-  return consumablePrices
+async function getConsumableListings () {
+  const graphQuery = `{
+    erc1155Listings(first: 1000, where:{category:"2", cancelled:false, sold:false}) {
+      priceInWei
+      id
+      erc1155TypeId
+      quantity
+    }
+  }`
+  const consumableListings = await sendGraphRequest(graphQuery)
+    .catch((err) => { console.log(err) })
+  return consumableListings.data.erc1155Listings
+}
+async function getConsumablePrices () {
+  const graphQuery = `{
+    erc1155Listings(first: 1000,orderBy:timeLastPurchased,orderDirection: desc, where:{category:"2",sold:true}) {
+      priceInWei
+      timeLastPurchased
+      erc1155TypeId
+    }
+  }`
+  const consumablePriceList = await sendGraphRequest(graphQuery)
+    .catch((err) => { console.log(err) })
+  return consumablePriceList.data.erc1155Listings
 }
 
 Vue.use(Vuex)
@@ -344,8 +338,8 @@ export default new Vuex.Store({
         commit('SET_ERRORS', error)
       })
     },
-    fetchOpenPortalGraph ({ commit }, blocksShown) {
-      return getOpenPortalPricesAndRarity(blocksShown).then(response => {
+    fetchOpenPortalGraph ({ commit }) {
+      return getOpenPortalPricesAndRarity().then(response => {
         commit('SET_OPEN_PORTAL_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
@@ -358,8 +352,8 @@ export default new Vuex.Store({
         commit('SET_ERRORS', error)
       })
     },
-    fetchWearablesGraph ({ commit }, blocksShown) {
-      return getWearablePrices(blocksShown).then(response => {
+    fetchWearablesGraph ({ commit }) {
+      return getWearablePrices().then(response => {
         commit('SET_WEARABLES_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
@@ -373,8 +367,8 @@ export default new Vuex.Store({
         throw error
       })
     },
-    fetchWearablesListing ({ commit }, blocksShown) {
-      return getWearableListings(blocksShown).then(response => {
+    fetchWearablesListing ({ commit }) {
+      return getWearableListings().then(response => {
         commit('SET_WEARABLES_LISTINGS', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
@@ -387,15 +381,15 @@ export default new Vuex.Store({
         commit('SET_ERRORS', error)
       })
     },
-    fetchConsumablesListing ({ commit }, blocksShown) {
-      return getConsumableListings(blocksShown).then(response => {
+    fetchConsumablesListing ({ commit }) {
+      return getConsumableListings().then(response => {
         commit('SET_CONSUMABLES_LISTINGS', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
       })
     },
-    fetchConsumablesGraph ({ commit }, blocksShown) {
-      return getConsumablePrices(blocksShown).then(response => {
+    fetchConsumablesGraph ({ commit }) {
+      return getConsumablePrices().then(response => {
         commit('SET_CONSUMABLES_GRAPH', response)
       }).catch(error => {
         commit('SET_ERRORS', error)

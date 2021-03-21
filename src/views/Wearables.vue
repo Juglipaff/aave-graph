@@ -1,9 +1,6 @@
 <template>
     <div class="container">
-      {{blocksShown}}  <br>
-       From Dataset of:
-    10 <input v-model="blocksShown" type="range" min="10" max="1500"> 1500
-    <button v-on:click="updateGraph()">Update</button>
+
     <br>
      <div v-if="errors.length!==0">
       OOPS... Something went wrong... Check the console for more info<br>
@@ -16,27 +13,27 @@
     <br>
       <div class="wrapper">
       <button v-for="wearable in wearableList" :class="{
-           common: wearable.rarity===1,
-           uncommon: wearable.rarity===2,
-           rare: wearable.rarity===5,
-           legendary: wearable.rarity===10,
-           mythical: wearable.rarity===20,
-           godlike:  wearable.rarity===50  }" :key="wearable.name" class="plate" v-on:click="filterGraph(wearable.id)">
+           common: wearable.rarityScoreModifier===1,
+           uncommon: wearable.rarityScoreModifier===2,
+           rare: wearable.rarityScoreModifier===5,
+           legendary: wearable.rarityScoreModifier===10,
+           mythical: wearable.rarityScoreModifier===20,
+           godlike:  wearable.rarityScoreModifier===50  }" :key="wearable.name" class="plate" v-on:click="filterGraph(wearable.id)">
           <button class="favourite" v-on:click="toggleFavorite(wearable.id)"><font-awesome-icon  :class="getCurrentFavStatus(wearable.id)" :icon="['fas', 'star']"/></button>
-        <div class="item-name"><div class="rarity">{{returnRarityString(wearable.rarity)}} </div> <div class="name">{{wearable.name}}<br> Traded: {{returnLiquidityForItem(wearable.name)}} time(s)<br>Total Quantity: {{wearable.quantity}}</div></div>
+        <div class="item-name"><div class="rarity">{{returnRarityString(wearable.rarityScoreModifier)}} </div> <div class="name">{{wearable.name}}<br> Traded: {{returnLiquidityForItem(wearable.name)}} time(s)<br>Total Quantity: {{wearable.maxQuantity}}</div></div>
       </button>
    </div>
      <chart  v-bind:chartData="chartData" v-bind:options="options" class="chart"/>
      <div class="links-wrapper">
-      <a class="link" :href="listing.link" v-for="listing in wearablesListingsFiltered" :key="listing.link" target="_blank">
-      {{parseInt(listing.price)}} GHST, ${{parseInt(listing.price*currentPrice)}}, {{listing.quantity}} Item(s)<br>
+      <a class="link" :href='`https://aavegotchi.com/baazaar/erc1155/${listing.id}`' v-for="listing in wearablesListingsFiltered" :key="listing.id" target="_blank">
+      {{parseInt(toEther(listing.priceInWei))}} GHST, ${{parseInt(toEther(listing.priceInWei)*currentPrice)}}, {{listing.quantity}} Item(s)<br>
      </a>
      </div>
     </div>
 </template>
 
 <script>
-
+import { ethers } from 'ethers'
 import { mapState } from 'vuex'
 import store from '../store/index.js'
 import Chart from '../components/Chart.vue'
@@ -65,7 +62,6 @@ export default {
     return {
       chartData: {},
       options: {},
-      blocksShown: 1000,
       priceForWearables: [],
       prices: [],
       currentPrice: 0,
@@ -79,12 +75,14 @@ export default {
   },
 
   created () {
-    this.getWearablesList().then(() => {
-      this.updateGraph()
-      this.getWearablesListings()
-    })
+    this.getWearablesList()
+    this.updateGraph()
+    this.getWearablesListings()
   },
   methods: {
+    toEther (wei) {
+      return ethers.utils.formatEther(wei)
+    },
     returnRarityString (rarity) {
       if (rarity === 1) {
         return 'Common'
@@ -126,9 +124,10 @@ export default {
       return `${liquidityItem ? liquidityItem.liquidityValue : 0}`
     },
     async getWearablesListings () {
-      await this.$store.dispatch('fetchWearablesListing', { blocksShown: this.blocksShown }).then(() => {
+      await this.$store.dispatch('fetchWearablesListing').then(() => {
+        console.log(`Listing length: ${this.wearablesListings.length}`)
         this.wearablesListingsFiltered = this.wearablesListings.sort((a, b) => {
-          if (a.price < b.price) {
+          if (ethers.BigNumber.from(a.priceInWei).lt(b.priceInWei)) {
             return -1
           }
           return 1
@@ -158,9 +157,9 @@ export default {
     sortWearablesList () {
       if (this.sortMethod === 'by Rarity') {
         this.wearableList.sort((a, b) => {
-          if (a.rarity < b.rarity) {
+          if (a.rarityScoreModifier < b.rarityScoreModifier) {
             return 1
-          } else if (a.rarity === b.rarity) {
+          } else if (a.rarityScoreModifier === b.rarityScoreModifier) {
             if (a.name < b.name) {
               return -1
             }
@@ -200,7 +199,7 @@ export default {
       this.currentAxis = true
       this.priceForWearablesFiltered = this.priceForWearables.filter((x) => x.id === id)
       this.updateGraphComponent(`${this.wearableList.find((obj) => obj.id === id).name}`)
-      this.wearablesListingsFiltered = this.wearablesListings.filter((x) => x.id === id)
+      this.wearablesListingsFiltered = this.wearablesListings.filter((x) => x.erc1155TypeId === id)
     },
     getLiquidities () {
       this.liquidity = []
@@ -210,6 +209,39 @@ export default {
         ).length
         this.liquidity.push({ name: this.wearableList[i].name, liquidityValue: itemLiquidityValue })
       }
+    },
+    async updateGraph () {
+      this.$Progress.start()
+      this.priceForWearables = []
+      await this.getWearablesListings()
+      await axios.get('https://api.coingecko.com/api/v3/coins/aavegotchi/market_chart?vs_currency=usd&days=max&interval=daily')
+        .then((response) => {
+          console.log('got coingecko response')
+          this.prices = response.data.prices
+          this.currentPrice = this.prices[this.prices.length - 1][1]
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+      await this.$store.dispatch('fetchWearablesGraph')
+        .then(() => {
+          for (var i = 0; i < this.wearableGraph.length; i++) {
+            const day = Math.floor(this.wearableGraph[i].timeLastPurchased / 86400) * 86400
+            const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
+            this.priceForWearables.push({ x: toDateTime(this.wearableGraph[i].timeLastPurchased), y: parseInt(ethers.utils.formatEther(this.wearableGraph[i].priceInWei) * (price ? price[1] : this.currentPrice)), GHST: parseInt(ethers.utils.formatEther(this.wearableGraph[i].priceInWei)), id: this.wearableGraph[i].erc1155TypeId, name: this.wearableList.find((obj) => obj.id === this.wearableGraph[i].erc1155TypeId).name })
+            if (this.priceForWearables[i].y > this.maxPrice) {
+              this.maxPrice = this.priceForWearables[i].y
+            }
+          }
+          this.currentAxis = true
+          this.priceForWearablesFiltered = this.priceForWearables
+          this.getLiquidities()
+          this.updateGraphComponent('Wearable Prices')
+          this.sortWearablesList()
+          this.$Progress.finish()
+        }).catch(() => {
+          this.$Progress.finish()
+        })
     },
     switchYAxis () {
       if (this.chartData.datasets[0] !== undefined) {
@@ -233,39 +265,6 @@ export default {
         }
       }
     },
-    async updateGraph () {
-      this.$Progress.start()
-      this.priceForWearables = []
-      await this.getWearablesListings()
-      await axios.get('https://api.coingecko.com/api/v3/coins/aavegotchi/market_chart?vs_currency=usd&days=max&interval=daily')
-        .then((response) => {
-          console.log('got coingecko response')
-          this.prices = response.data.prices
-          this.currentPrice = this.prices[this.prices.length - 1][1]
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-      await this.$store.dispatch('fetchWearablesGraph', { blocksShown: this.blocksShown })
-        .then(() => {
-          for (var i = 0; i < this.wearableGraph.length; i++) {
-            const day = Math.floor(this.wearableGraph[i].x / 86400) * 86400
-            const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-            this.priceForWearables.push({ x: toDateTime(this.wearableGraph[i].x), y: parseInt(this.wearableGraph[i].y * (price ? price[1] : this.currentPrice)), GHST: parseInt(this.wearableGraph[i].y), id: this.wearableGraph[i].id, name: this.wearableList.find((obj) => obj.id === this.wearableGraph[i].id).name })
-            if (this.priceForWearables[i].y > this.maxPrice) {
-              this.maxPrice = this.priceForWearables[i].y
-            }
-          }
-          this.currentAxis = true
-          this.priceForWearablesFiltered = this.priceForWearables
-          this.getLiquidities()
-          this.updateGraphComponent('Wearables Prices')
-          this.sortWearablesList()
-          this.$Progress.finish()
-        }).catch(() => {
-          this.$Progress.finish()
-        })
-    },
     updateGraphComponent (label) {
       this.chartData = {
         type: 'scatter',
@@ -287,7 +286,6 @@ export default {
             {
               type: 'logarithmic',
               id: 'left-y-axis',
-
               ticks: {
                 beginAtZero: true,
                 autoSkip: false,
@@ -295,7 +293,6 @@ export default {
                 callback: (value) => {
                   return this.currentAxis ? `$${value}` : `${value} GHST`
                 }
-
               },
               afterBuildTicks: (chartObj) => {
                 var tickArray = []
@@ -321,8 +318,6 @@ export default {
                 }
               },
               ticks: {
-                source: 'date',
-                autoSkip: false,
                 beginAtZero: true
               },
               gridLines: {
@@ -356,7 +351,7 @@ export default {
               const label = ['NFT price: ',
                 this.currentAxis ? `$${tooltipItem.yLabel}` : `$${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST}`,
                 this.currentAxis ? `${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST} GHST` : `${tooltipItem.yLabel} GHST`,
-                    `Name: ${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].name}`
+                `Name: ${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].name}`
               ]
               return label
             }
