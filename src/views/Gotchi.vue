@@ -1,8 +1,7 @@
 <template>
   <div class="container">
-
 <input class="checkbox" type="checkbox"  v-model="isRarityTurnedOn"> Custom rarity: From <input type="number" v-model="rarityLow"  min="0" max="1000">
-     To <input type="number" v-model="rarityHigh"  min="0" max="1000"> <br>
+     To <input type="number" v-model="rarityHigh"  min="0" max="1000"> <button v-on:click="updateGraph">Update</button> <br>
     <div v-if="errors.length!==0">
       OOPS... Something went wrong... Check the console for more info<br>
        <div v-for="error in errors" :key="error.message">
