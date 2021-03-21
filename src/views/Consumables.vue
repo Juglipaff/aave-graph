@@ -36,7 +36,6 @@ import { ethers } from 'ethers'
 import { mapState } from 'vuex'
 import store from '../store/index.js'
 import Chart from '../components/Chart.vue'
-import axios from 'axios'
 
 function toDateTime (secs) {
   const t = new Date(1970, 0, 1)
@@ -54,7 +53,8 @@ export default {
       wearableList: 'consumableList',
       wearableGraph: 'consumablesGraph',
       wearablesListings: 'consumablesListings',
-      errors: 'errors'
+      errors: 'errors',
+      GHSTprices: 'GHSTprices'
     })
   },
   data () {
@@ -213,16 +213,19 @@ export default {
       this.$Progress.start()
       this.priceForWearables = []
       await this.getWearablesListings()
-
-      await axios.get('https://api.coingecko.com/api/v3/coins/aavegotchi/market_chart?vs_currency=usd&days=max&interval=daily')
-        .then((response) => {
-          console.log('got coingecko response')
-          this.prices = response.data.prices
-          this.currentPrice = this.prices[this.prices.length - 1][1]
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+      if (this.GHSTprices.length === 0) {
+        await this.$store.dispatch('fetchGHSTPrices')
+          .then(() => {
+            console.log('Got axios response')
+            this.prices = this.GHSTprices
+          })
+          .catch((error) => {
+            console.log(error)
+          })
+      } else {
+        this.prices = this.GHSTprices
+      }
+      this.currentPrice = this.prices[this.prices.length - 1][1]
       await this.$store.dispatch('fetchConsumablesGraph')
         .then(() => {
           for (var i = 0; i < this.wearableGraph.length; i++) {

@@ -52,6 +52,13 @@ async function getClosedPortalsQuantity () {
   return parseInt(balance._hex, 16) * 0.00000000000001
 }
 
+async function getHistoricalPricesGHST () {
+  const prices = await axios.get('https://api.coingecko.com/api/v3/coins/aavegotchi/market_chart?vs_currency=usd&days=max&interval=daily')
+    .catch((error) => {
+      console.log(error)
+    })
+  return prices.data.prices
+}
 // Open portals
 
 async function getOpenPortalPricesAndRarity () {
@@ -242,6 +249,7 @@ export default new Vuex.Store({
     consumableList: [],
     consumablesListings: [],
     consumablesGraph: [],
+    GHSTprices: [],
     closedPortalsQuantity: 0,
     errors: []
   },
@@ -288,6 +296,10 @@ export default new Vuex.Store({
     },
     SET_CLOSED_PORTALS_QUANTITY (state, Balance) {
       state.closedPortalsQuantity = Balance
+      state.errors = []
+    },
+    SET_GHST_PRICES (state, prices) {
+      state.GHSTprices = prices
       state.errors = []
     },
     SET_ERRORS (state, errorData) {
@@ -369,6 +381,13 @@ export default new Vuex.Store({
     fetchClosedPortalQuantity ({ commit }) {
       return getClosedPortalsQuantity().then(response => {
         commit('SET_CLOSED_PORTALS_QUANTITY', response)
+      }).catch(error => {
+        commit('SET_ERRORS', error)
+      })
+    },
+    fetchGHSTPrices ({ commit }) {
+      return getHistoricalPricesGHST().then(response => {
+        commit('SET_GHST_PRICES', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
       })
