@@ -20,13 +20,13 @@
            mythical: ERC1155.rarityScoreModifier===20,
            godlike:  ERC1155.rarityScoreModifier===50  }" :key="ERC1155.name" class="plate" v-on:click="filterGraph(ERC1155.id)">
           <button class="favourite" v-on:click="toggleFavorite(ERC1155.id)"><font-awesome-icon  :class="getCurrentFavStatus(ERC1155.id)" :icon="['fas', 'star']"/></button>
-        <div class="item-name"><div class="rarity">{{returnRarityString(ERC1155.rarityScoreModifier)}} </div> <div class="name">{{ERC1155.name}}<br> Traded: {{returnLiquidityForItem(ERC1155.name)}} time(s)<br>Total Quantity: {{ERC1155.maxQuantity}}</div></div>
+        <div class="item-name"><div class="rarity">{{returnRarityString(ERC1155.rarityScoreModifier)}} </div> <div class="name">{{ERC1155.name}}<br> Traded: {{returnLiquidityForItem(ERC1155.name)}} time(s) <span v-if="isWearable!==3"><br>Total Quantity: {{ERC1155.maxQuantity}}</span></div></div>
       </button>
    </div>
      <chart  v-bind:chartData="chartData" v-bind:options="options" class="chart"/>
      <div class="links-wrapper">
       <a class="link" :href='`https://aavegotchi.com/baazaar/erc1155/${listing.id}`' v-for="listing in ERC1155ListingsFiltered" :key="listing.id" target="_blank">
-      {{parseInt(toEther(listing.priceInWei))}} GHST, ${{parseInt(toEther(listing.priceInWei)*currentPrice)}}, {{listing.quantity}} Item(s)<br>
+      {{toEther(listing.priceInWei)}} GHST, ${{(toEther(listing.priceInWei)*currentPrice).toFixed(2)}}, {{listing.quantity}}Item(s) <br>
      </a>
      </div>
     </div>
@@ -46,7 +46,7 @@ function toDateTime (secs) {
 }
 
 export default {
-  props: { isWearable: Boolean },
+  props: { isWearable: Number },
   store,
   name: 'ERC1155',
   components: { Chart },
@@ -78,7 +78,7 @@ export default {
   created () {
     this.getERC1155List()
     this.updateGraph()
-    this.getERC1155Listings()
+    // this.getERC1155Listings()
   },
   methods: {
     toEther (wei) {
@@ -233,7 +233,7 @@ export default {
           for (var i = 0; i < this.ERC1155Graph.length; i++) {
             const day = Math.floor(this.ERC1155Graph[i].timeLastPurchased / 86400) * 86400
             const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-            this.priceForERC1155.push({ x: toDateTime(this.ERC1155Graph[i].timeLastPurchased), y: parseInt(ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei) * (price ? price[1] : this.currentPrice)), GHST: parseInt(ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei)), id: this.ERC1155Graph[i].erc1155TypeId, name: this.ERC1155List.find((obj) => obj.id === this.ERC1155Graph[i].erc1155TypeId).name })
+            this.priceForERC1155.push({ x: toDateTime(this.ERC1155Graph[i].timeLastPurchased), y: (ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei) * (price ? price[1] : this.currentPrice)).toFixed(2), GHST: ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei), id: this.ERC1155Graph[i].erc1155TypeId, name: this.ERC1155List.find((obj) => obj.id === this.ERC1155Graph[i].erc1155TypeId).name })
             if (this.priceForERC1155[i].y > this.maxPrice) {
               this.maxPrice = this.priceForERC1155[i].y
             }
@@ -241,7 +241,7 @@ export default {
           this.currentAxis = true
           this.priceForERC1155Filtered = this.priceForERC1155
           this.getLiquidities()
-          this.updateGraphComponent(this.isWearable ? 'Wearables Prices' : 'Consumables Prices')
+          this.updateGraphComponent('Wearables Prices')
           this.sortERC1155List()
           this.$Progress.finish()
         }).catch(() => {
@@ -303,7 +303,7 @@ export default {
                 var tickArray = []
                 tickArray.push(0)
                 for (var i = 1; i <= this.maxPrice; i *= 1.7) {
-                  tickArray.push(parseInt(i))
+                  tickArray.push(i.toFixed(1))
                 }
                 chartObj.ticks = tickArray
               },

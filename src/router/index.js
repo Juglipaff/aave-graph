@@ -34,13 +34,18 @@ const routes = [
     path: '/wearables',
     name: 'Wearables',
     component: ERC1155,
-    props: { isWearable: true }
+    props: { isWearable: 0 }
   },
   {
     path: '/consumables',
     name: 'Consumables',
     component: ERC1155,
-    props: { isWearable: false }
+    props: { isWearable: 2 }
+  }, {
+    path: '/tickets',
+    name: 'Tickets',
+    component: ERC1155,
+    props: { isWearable: 3 }
   },
   {
     path: '*',

@@ -1,4 +1,4 @@
-import { ethers } from 'ethers'
+// import { ethers } from 'ethers'
 // import Web3 from 'web3'
 
 import Vue from 'vue'
@@ -19,37 +19,14 @@ async function sendGraphRequest (graphQuery) {
 }
 
 async function getClosedPortalsQuantity () {
-  const aavegotchiDiamondAddress = '0x86935F11C86623deC8a25696E1C19a8659CbF95d'
-  const provider = new ethers.providers.JsonRpcProvider('https://rpc-mainnet.matic.network/')
-  var minAbi = [{
-    constant: !0,
-    inputs: [{
-      name: '_owner',
-      type: 'address'
-    }],
-    name: 'balanceOf',
-    outputs: [{
-      name: 'balance',
-      type: 'uint256'
-    }],
-    type: 'function'
-  }, {
-    constant: !0,
-    inputs: [],
-    name: 'decimals',
-    outputs: [{
-      name: '',
-      type: 'uint8'
-    }],
-    type: 'function'
-  }]
-  const contract = new ethers.Contract('0xb0897686c545045aFc77CF20eC7A532E3120E0F1', minAbi, provider)
-  var balance = { _hex: 0 }
-  balance = await contract.balanceOf(aavegotchiDiamondAddress)
-    .catch((err) => {
-      console.log(err)
-    })
-  return parseInt(balance._hex, 16) * 0.00000000000001
+  const graphQuery = `{
+    statistic (id:0){
+      portalsOpened
+    }
+    }`
+  const portalsOpened = await sendGraphRequest(graphQuery)
+    .catch((err) => { console.log(err) })
+  return (10000 - parseInt(portalsOpened.data.statistic.portalsOpened))
 }
 
 async function getHistoricalPricesGHST () {
@@ -127,11 +104,10 @@ async function getClosedPortalListings () {
 
 // ERC1155
 
-async function getERC1155List () {
-  const sessionItem = sessionStorage.getItem('ERC1155')
-  if (sessionItem === null || sessionItem === undefined) {
+async function getERC1155List (isWearable) {
+  if (isWearable !== 3) {
     const graphQuery = `{
-    itemTypes(first:1000) {
+    itemTypes(first:1000,where:{category:${isWearable}}) {
       name
       id
       rarityScoreModifier
@@ -140,14 +116,55 @@ async function getERC1155List () {
   }`
     const list = await sendGraphRequest(graphQuery)
       .catch((err) => { console.log(err) })
-    sessionStorage.setItem('ERC1155', JSON.stringify(list.data.itemTypes))
     return list.data.itemTypes
   }
-  return JSON.parse(sessionItem)
+  const list = {
+    data: {
+      itemTypes: [
+        {
+          id: '0',
+          maxQuantity: '500',
+          name: 'Ticket - Common',
+          rarityScoreModifier: 1
+        },
+        {
+          id: '1',
+          maxQuantity: '250',
+          name: 'Ticket - Uncommon',
+          rarityScoreModifier: 2
+        },
+        {
+          id: '2',
+          maxQuantity: '500',
+          name: 'Ticket - Rare',
+          rarityScoreModifier: 5
+        },
+        {
+          id: '3',
+          maxQuantity: '250',
+          name: 'Ticket - Legendary',
+          rarityScoreModifier: 10
+        },
+        {
+          id: '4',
+          maxQuantity: '500',
+          name: 'Ticket - Mythical',
+          rarityScoreModifier: 20
+        },
+        {
+          id: '5',
+          maxQuantity: '250',
+          name: 'Ticket - Godlike',
+          rarityScoreModifier: 50
+        }
+      ]
+    }
+  }
+  return list.data.itemTypes
 }
 async function getERC1155Prices (isWearable) {
   const graphQuery = `{
-    erc1155Listings(first: 1000, orderBy:timeLastPurchased,orderDirection: desc,where:{category:"${isWearable ? 0 : 2}",sold:true}) {
+    erc1155Listings(first: 1000, orderBy:timeLastPurchased,orderDirection: desc,where:{category:"${isWearable}",sold:true}) {
       priceInWei
       timeLastPurchased
       erc1155TypeId
@@ -160,7 +177,7 @@ async function getERC1155Prices (isWearable) {
 
 async function getERC1155Listings (isWearable) {
   const graphQuery = `{
-    erc1155Listings(first: 1000, where:{category:"${isWearable ? 0 : 2}", cancelled:false, sold:false}) {
+    erc1155Listings(first: 1000, where:{category:"${isWearable}", cancelled:false, sold:false}) {
       priceInWei
       id
       erc1155TypeId
@@ -170,30 +187,6 @@ async function getERC1155Listings (isWearable) {
   const ERC1155Listings = await sendGraphRequest(graphQuery)
     .catch((err) => { console.log(err) })
   return ERC1155Listings.data.erc1155Listings
-}
-
-async function getERC1155FilteredList (isWearable) {
-  const ERC1155List = await getERC1155List()
-    .catch((err) => {
-      console.log(err)
-    })
-  var ERC1155Ids = []
-  var ERC1155ReturnList = []
-  if (isWearable) {
-    for (let i = 0; i < 126; i++) {
-      ERC1155Ids.push(i)
-    }
-  } else {
-    for (let i = 126; i < 130; i++) {
-      ERC1155Ids.push(i)
-    }
-  }
-  for (let i = 0; i < ERC1155List.length; i++) {
-    if (ERC1155Ids.some((a) => parseInt(ERC1155List[i].id) === a)) {
-      ERC1155ReturnList.push(ERC1155List[i])
-    }
-  }
-  return ERC1155ReturnList
 }
 
 Vue.use(Vuex)
@@ -275,7 +268,7 @@ export default new Vuex.Store({
       })
     },
     fetchERC1155List ({ commit }, isWearable) {
-      return getERC1155FilteredList(isWearable).then(response => {
+      return getERC1155List(isWearable).then(response => {
         commit('SET_ERC1155_LIST', response)
       }).catch(error => {
         commit('SET_ERRORS', error)

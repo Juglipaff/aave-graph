@@ -7,6 +7,7 @@
       <router-link to="/opened-portals">Open Portals</router-link>
       <router-link to="/wearables">Wearables</router-link>
       <router-link to="/consumables">Consumables</router-link>
+      <router-link to="/tickets">Tickets</router-link>
     </div>
     <vue-progress-bar></vue-progress-bar>
     <router-view :key="$route.fullPath"/>
