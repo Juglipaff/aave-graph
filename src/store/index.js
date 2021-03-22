@@ -39,8 +39,12 @@ async function getHistoricalPricesGHST () {
 // Open portals
 
 async function getOpenPortalPricesAndRarity () {
-  const graphQuery = `{
-    erc721Listings(first:1000,orderDirection:desc,orderBy:timePurchased,where:{category:2,timePurchased_not:"0"})
+  var dataArray = []
+  var length = 1000
+  var i = 0
+  while (length === 1000) {
+    const graphQuery = `{
+    erc721Listings(first:1000,skip:${i * 1000},orderDirection:desc,orderBy:timePurchased,where:{category:2,timePurchased_not:"0"})
     {
       priceInWei
       timePurchased
@@ -52,54 +56,86 @@ async function getOpenPortalPricesAndRarity () {
       }
     }
     }`
-  const openPortalsPrices = await sendGraphRequest(graphQuery)
-    .catch((err) => { console.log(err) })
-  return openPortalsPrices.data.erc721Listings
+    i += 1
+    const openPortalsPrices = await sendGraphRequest(graphQuery)
+      .catch((err) => { console.log(err) })
+    length = openPortalsPrices.data.erc721Listings.length
+    dataArray = dataArray.concat(openPortalsPrices.data.erc721Listings)
+  }
+  console.log(`Points got: ${dataArray.length}`)
+  return dataArray
 }
 
 // Gotchi
 
 async function getGotchiPricesAndRarity () {
-  const graphQuery = `{
-  erc721Listings(first:1000,orderDirection:desc,orderBy:timePurchased,where:{category:3,timePurchased_not:"0"})
-  {
-    priceInWei
-    timePurchased
-    gotchi{
-      modifiedRarityScore
+  // const GotchiInfo =[]
+  var dataArray = []
+  var length = 1000
+  var i = 0
+  while (length === 1000) {
+    const graphQuery = `{
+    erc721Listings(first:1000,skip:${i * 1000},orderDirection:desc,orderBy:timePurchased,where:{category:3,timePurchased_not:"0"})
+    {
+      priceInWei
+      timePurchased
+      gotchi{
+        modifiedRarityScore
+      }
     }
-  }
   }`
-  const gotchiPrices = await sendGraphRequest(graphQuery)
-    .catch((err) => { console.log(err) })
-  return gotchiPrices.data.erc721Listings
+    i += 1
+    const gotchiPrices = await sendGraphRequest(graphQuery)
+      .catch((err) => { console.log(err) })
+    length = gotchiPrices.data.erc721Listings.length
+    dataArray = dataArray.concat(gotchiPrices.data.erc721Listings)
+  }
+  console.log(`Points got: ${dataArray.length}`)
+  return dataArray
 }
 // Closed portals
 
 async function getClosedPortalPrices () {
-  const graphQuery = `{
-    erc721Listings(first:1000,orderDirection:desc,orderBy:timePurchased,where:{category:0,timePurchased_not:"0"})
+  var dataArray = []
+  var length = 1000
+  var i = 0
+  while (length === 1000) {
+    const graphQuery = `{
+    erc721Listings(first:1000,skip:${i * 1000},orderDirection:desc,orderBy:timePurchased,where:{category:0,timePurchased_not:"0"})
     {
       priceInWei
       timePurchased
     }
-    }`
-  const closedPortalPrices = await sendGraphRequest(graphQuery)
-    .catch((err) => { console.log(err) })
-  return closedPortalPrices.data.erc721Listings
+  }`
+    i += 1
+    const closedPortalPrices = await sendGraphRequest(graphQuery)
+      .catch((err) => { console.log(err) })
+    length = closedPortalPrices.data.erc721Listings.length
+    dataArray = dataArray.concat(closedPortalPrices.data.erc721Listings)
+  }
+  console.log(`Points got: ${dataArray.length}`)
+  return dataArray
 }
 
 async function getClosedPortalListings () {
-  const graphQuery = `{
-    erc721Listings(first:1000,orderDirection:desc,orderBy:timePurchased,where:{category:0,timePurchased:"0",cancelled:false})
+  var dataArray = []
+  var length = 1000
+  var i = 0
+  while (length === 1000) {
+    const graphQuery = `{
+    erc721Listings(first:1000,skip:${i * 1000},orderBy:timeCreated,orderDirection:desc,where:{category:0,timePurchased:"0",cancelled:false})
     {
       priceInWei
       id
     }
   }`
-  const closedPortalListings = await sendGraphRequest(graphQuery)
-    .catch((err) => { console.log(err) })
-  return closedPortalListings.data.erc721Listings
+    i += 1
+    const closedPortalListings = await sendGraphRequest(graphQuery)
+      .catch((err) => { console.log(err) })
+    length = closedPortalListings.data.erc721Listings.length
+    dataArray = dataArray.concat(closedPortalListings.data.erc721Listings)
+  }
+  return dataArray
 }
 
 // ERC1155
@@ -163,30 +199,48 @@ async function getERC1155List (isWearable) {
   return list.data.itemTypes
 }
 async function getERC1155Prices (isWearable) {
-  const graphQuery = `{
-    erc1155Listings(first: 1000, orderBy:timeLastPurchased,orderDirection: desc,where:{category:"${isWearable}",sold:true}) {
+  var dataArray = []
+  var length = 1000
+  var i = 0
+  while (length === 1000) {
+    const graphQuery = `{
+    erc1155Listings(first: 1000,skip:${i * 1000}, orderBy:timeLastPurchased,orderDirection: desc,where:{category:"${isWearable}",sold:true}) {
       priceInWei
       timeLastPurchased
       erc1155TypeId
     }
   }`
-  const ERC1155PriceList = await sendGraphRequest(graphQuery)
-    .catch((err) => { console.log(err) })
-  return ERC1155PriceList.data.erc1155Listings
+    i += 1
+    const ERC1155PriceList = await sendGraphRequest(graphQuery)
+      .catch((err) => { console.log(err) })
+    length = ERC1155PriceList.data.erc1155Listings.length
+    dataArray = dataArray.concat(ERC1155PriceList.data.erc1155Listings)
+  }
+  console.log(`Points got: ${dataArray.length}`)
+  return dataArray
 }
 
 async function getERC1155Listings (isWearable) {
-  const graphQuery = `{
-    erc1155Listings(first: 1000, where:{category:"${isWearable}", cancelled:false, sold:false}) {
+  var dataArray = []
+  var length = 1000
+  var i = 0
+  while (length === 1000) {
+    const graphQuery = `{
+    erc1155Listings(first: 1000,skip:${i * 1000}, orderBy:timeCreated,orderDirection:desc,where:{category:"${isWearable}", cancelled:false, sold:false}) {
       priceInWei
       id
       erc1155TypeId
       quantity
     }
   }`
-  const ERC1155Listings = await sendGraphRequest(graphQuery)
-    .catch((err) => { console.log(err) })
-  return ERC1155Listings.data.erc1155Listings
+    i += 1
+    const ERC1155Listings = await sendGraphRequest(graphQuery)
+      .catch((err) => { console.log(err) })
+    length = ERC1155Listings.data.erc1155Listings.length
+    dataArray = dataArray.concat(ERC1155Listings.data.erc1155Listings)
+  }
+
+  return dataArray
 }
 
 Vue.use(Vuex)
