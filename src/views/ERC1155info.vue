@@ -101,9 +101,9 @@ export default {
       return 'undefined'
     },
     getCurrentFavStatus (id) {
-      const currentFavouriteStatus = localStorage.getItem(id)
+      const currentFavouriteStatus = localStorage.getItem(`{id:${id},category:${this.isWearable}`)
       if (currentFavouriteStatus === null || currentFavouriteStatus === undefined) {
-        localStorage.setItem(id, false)
+        localStorage.setItem(`{id:${id},category:${this.isWearable}`, false)
         return 'not-fav'
       } else if (currentFavouriteStatus === 'false') {
         return 'not-fav'
@@ -114,11 +114,11 @@ export default {
     toggleFavorite (id) {
       const currentFavouriteStatus = localStorage.getItem(id)
       if (currentFavouriteStatus === null || currentFavouriteStatus === undefined) {
-        localStorage.setItem(id, false)
+        localStorage.setItem(`{id:${id},category:${this.isWearable}`, false)
         return
       }
       const isTrue = (currentFavouriteStatus === 'true')
-      localStorage.setItem(id, !isTrue)
+      localStorage.setItem(`{id:${id},category:${this.isWearable}`, !isTrue)
     },
     returnLiquidityForItem (name) {
       var liquidityItem = this.liquidity.find((a) => a.name === name)
@@ -179,8 +179,8 @@ export default {
         })
       } else if (this.sortMethod === 'Favourite') {
         this.ERC1155List.sort((a, b) => {
-          var favItem1 = localStorage.getItem(a.id)
-          var favItem2 = localStorage.getItem(b.id)
+          var favItem1 = localStorage.getItem(`{id:${a.id},category:${this.isWearable}`)
+          var favItem2 = localStorage.getItem(`{id:${b.id},category:${this.isWearable}`)
           if (favItem1 === 'true' && favItem2 === 'false') {
             return -1
           }
@@ -227,7 +227,7 @@ export default {
       } else {
         this.prices = this.GHSTprices
       }
-      this.currentPrice = this.prices[this.prices.length - 1][1]
+      this.currentPrice = this.prices[this.prices.length - 1] ? this.prices[this.prices.length - 1][1] : 0
       await this.$store.dispatch('fetchERC1155Graph', this.isWearable)
         .then(() => {
           for (var i = 0; i < this.ERC1155Graph.length; i++) {
