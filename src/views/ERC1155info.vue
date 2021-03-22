@@ -234,7 +234,7 @@ export default {
             const day = Math.floor(this.ERC1155Graph[i].timeLastPurchased / 86400) * 86400
             const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
             this.priceForERC1155.push({ x: toDateTime(this.ERC1155Graph[i].timeLastPurchased), y: (ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei) * (price ? price[1] : this.currentPrice)).toFixed(2), GHST: ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei), id: this.ERC1155Graph[i].erc1155TypeId, name: this.ERC1155List.find((obj) => obj.id === this.ERC1155Graph[i].erc1155TypeId).name })
-            if (this.priceForERC1155[i].y > this.maxPrice) {
+            if (parseFloat(this.priceForERC1155[i].y) > this.maxPrice) {
               this.maxPrice = this.priceForERC1155[i].y
             }
           }
@@ -303,7 +303,7 @@ export default {
                 var tickArray = []
                 tickArray.push(0)
                 for (var i = 1; i <= this.maxPrice; i *= 1.7) {
-                  tickArray.push(i.toFixed(1))
+                  tickArray.push(parseInt(i))
                 }
                 chartObj.ticks = tickArray
               },
