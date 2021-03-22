@@ -26,7 +26,7 @@
      <chart  v-bind:chartData="chartData" v-bind:options="options" class="chart"/>
      <div class="links-wrapper">
       <a class="link" :href='`https://aavegotchi.com/baazaar/erc1155/${listing.id}`' v-for="listing in ERC1155ListingsFiltered" :key="listing.id" target="_blank">
-      {{toEther(listing.priceInWei)}} GHST, ${{(toEther(listing.priceInWei)*currentPrice).toFixed(2)}}, {{listing.quantity}}Item(s) <br>
+      {{(toEther(listing.priceInWei))}} GHST, ${{(toEther(listing.priceInWei)*currentPrice).toFixed(2)}}, {{listing.quantity}}Item(s) <br>
      </a>
      </div>
     </div>
@@ -82,7 +82,7 @@ export default {
   },
   methods: {
     toEther (wei) {
-      return ethers.utils.formatEther(wei)
+      return parseFloat(ethers.utils.formatEther(wei)).toFixed(2)
     },
     returnRarityString (rarity) {
       if (rarity === 1) {
