@@ -8,6 +8,7 @@
         {{error.message}}
       </div>
     </div>
+       <button class="switch_axis" v-on:click="switchYAxis()"> <div v-if="currentAxis">$</div><div v-else>GHST</div> </button>
     <chart v-bind:chartData="chartData" v-bind:options="options" id="chart"/>
   </div>
 </template>
@@ -55,13 +56,40 @@ export default {
       rarityLow: 0,
       rarityHigh: 0,
       currentPrice: 0,
+      currentAxis: true,
       isRarityTurnedOn: false,
       priceForGotchisArrays: []
 
     }
   },
   methods: {
-
+    switchYAxis () {
+      if (this.chartData.datasets[0] !== undefined) {
+        this.currentAxis = !this.currentAxis
+        const datasets = []
+        for (let k = 0; k < this.priceForGotchisArrays.length; k++) {
+          for (let n = 0; n < this.priceForGotchisArrays[k].length; n++) {
+            this.priceForGotchisArrays[k][n] = { x: this.priceForGotchisArrays[k][n].x, y: this.priceForGotchisArrays[k][n].GHST, rarity: this.priceForGotchisArrays[k][n].rarity, GHST: this.priceForGotchisArrays[k][n].y }
+          }
+          if (this.priceForGotchisArrays[k].length !== 0) {
+            datasets.push({
+              label: `${this.isRarityTurnedOn === true ? 'custom Rarity' : 'To ' + (350 + k * 60)}`,
+              data: this.priceForGotchisArrays[k],
+              fill: true,
+              borderColor: this.colorArray[k],
+              backgroundColor: this.colorArray[k],
+              borderWidth: 4,
+              type: 'scatter',
+              yAxisID: 'left-y-axis'
+            })
+          }
+        }
+        this.chartData = {
+          type: 'scatter',
+          datasets: datasets
+        }
+      }
+    },
     async updateGraph () {
       for (var i = 0; i < 7; i++) {
         this.priceForGotchisArrays[i] = []
@@ -129,21 +157,7 @@ export default {
             type: 'scatter',
             datasets: datasets
           }
-          /* this.chartData = {
-            type: 'scatter',
-            datasets: [
-              {
-                label: 'Price For Gotchi',
-                data: this.priceForGotchi,
-                fill: true,
-                borderColor: this.colorArray,
-                backgroundColor: 'rgba(255, 0, 0, 255)',
-                borderWidth: 4,
-                type: 'scatter',
-                yAxisID: 'left-y-axis'
-              }
-            ]
-          } */
+
           this.options = {
             scales: {
               yAxes: [
@@ -151,10 +165,8 @@ export default {
                   type: 'logarithmic',
                   id: 'left-y-axis',
                   ticks: {
-
-                    //  max: this.maxPrice,
                     callback: (value) => {
-                      return `$${value}`
+                      return this.currentAxis ? `$${value}` : `${value} GHST`
                     }
                   },
                   afterBuildTicks: (chartObj) => {
@@ -209,8 +221,8 @@ export default {
                 },
                 afterLabel: (tooltipItem, data) => {
                   const label = ['NFT price: ',
-                    `$${parseInt(tooltipItem.yLabel)}`,
-                    `${parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST)} GHST`,
+                    this.currentAxis ? `$${parseInt(tooltipItem.yLabel)}` : `$${parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST)}`,
+                    this.currentAxis ? `${parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST)} GHST` : `${parseInt(tooltipItem.yLabel)} GHST`,
                     `Rarity: ${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].rarity}`
                   ]
 
@@ -230,18 +242,6 @@ export default {
             responsive: true,
             responsiveAnimationDuration: 0,
             maintainAspectRatio: false
-            /* plugins: {
-              zoom: {
-                pan: {
-                  enabled: true,
-                  mode: 'x'
-                },
-                zoom: {
-                  enabled: true,
-                  mode: 'x'
-                }
-              }
-            } */
           }
 
           this.$Progress.finish()
@@ -256,7 +256,11 @@ export default {
 }
 </script>
 <style scoped>
-
+.switch_axis{
+  float:left;
+  margin-bottom:20px;
+  margin-left:30px;
+}
 button{
   width:70px;
   height:25px;

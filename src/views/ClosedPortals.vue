@@ -7,6 +7,7 @@
         {{error.message}}
       </div>
     </div>
+      <button class="switch_axis" v-on:click="switchYAxis()"> <div v-if="currentAxis">$</div><div v-else>GHST</div> </button>
     <chart v-bind:chartData="chartData" v-bind:options="options" id="chart"/>
   </div>
 </template>
@@ -42,10 +43,34 @@ export default {
       options: {},
       priceForClosedPortals: [],
       prices: [],
+      currentAxis: true,
       currentPrice: 0
     }
   },
   methods: {
+    switchYAxis () {
+      if (this.chartData.datasets[0] !== undefined) {
+        this.currentAxis = !this.currentAxis
+        for (let k = 0; k < this.priceForClosedPortals.length; k++) {
+          this.priceForClosedPortals[k] = { x: this.priceForClosedPortals[k].x, y: this.priceForClosedPortals[k].GHST, GHST: this.priceForClosedPortals[k].y }
+        }
+        this.chartData = {
+          type: 'scatter',
+          datasets: [
+            {
+              label: 'Price For Closed Portals',
+              data: this.priceForClosedPortals,
+              fill: false,
+              borderColor: '#0088cc',
+              borderWidth: 4,
+              type: 'scatter',
+              yAxisID: 'left-y-axis',
+              id: 'closedportal'
+            }
+          ]
+        }
+      }
+    },
     async updateGraph () {
       this.priceForClosedPortals = []
       this.$Progress.start()
@@ -67,7 +92,7 @@ export default {
         for (var i = 0; i < this.closedPortalGraph.length; i++) {
           const day = Math.floor(this.closedPortalGraph[i].timePurchased / 86400) * 86400
           const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-          this.priceForClosedPortals.push({ x: toDateTime(this.closedPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice) })
+          this.priceForClosedPortals.push({ x: toDateTime(this.closedPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice), GHST: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) })
         }
 
         this.chartData = {
@@ -92,9 +117,9 @@ export default {
                 type: 'logarithmic',
                 id: 'left-y-axis',
                 ticks: {
-                  // max: this.maxPrice,
+                // max: this.maxPrice,
                   callback: (value) => {
-                    return `$${value}`
+                    return this.currentAxis ? `$${value}` : `${value} GHST`
                   }
                 },
                 afterBuildTicks: (chartObj) => {
@@ -147,10 +172,10 @@ export default {
                 const label = tooltipItem.xLabel
                 return label
               },
-              afterLabel: (tooltipItem) => {
+              afterLabel: (tooltipItem, data) => {
                 const label = ['NFT price: ',
-                  `$${parseInt(tooltipItem.yLabel)}`,
-                  `${parseInt(ethers.utils.formatEther(this.closedPortalGraph[tooltipItem.index].priceInWei))} GHST`
+                  this.currentAxis ? `$${parseInt(tooltipItem.yLabel)}` : `$${parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST)}`,
+                  this.currentAxis ? `${parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST)} GHST` : `${parseInt(tooltipItem.yLabel)} GHST`
                 ]
                 return label
               }
@@ -180,7 +205,10 @@ export default {
 }
 </script>
 <style scoped>
-
+.switch_axis{
+  float:left;
+  margin-left:30px;
+}
 #chart{
   margin-top:30px;
 }

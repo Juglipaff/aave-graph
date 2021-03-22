@@ -241,7 +241,15 @@ export default {
           this.currentAxis = true
           this.priceForERC1155Filtered = this.priceForERC1155
           this.getLiquidities()
-          this.updateGraphComponent('Wearables Prices')
+          let graphName = ''
+          if (this.isWearable === 0) {
+            graphName = 'Wearable Prices'
+          } else if (this.isWearable === 2) {
+            graphName = 'Consumable Prices'
+          } else {
+            graphName = 'Ticket Prices'
+          }
+          this.updateGraphComponent(graphName)
           this.sortERC1155List()
           this.$Progress.finish()
         }).catch(() => {

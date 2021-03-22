@@ -6,6 +6,7 @@
         {{error.message}}
       </div>
     </div>
+     <button class="switch_axis" v-on:click="switchYAxis()"> <div v-if="currentAxis">$</div><div v-else>GHST</div> </button>
     <chart v-bind:chartData="chartData" v-bind:options="options" id="chart"/>
   </div>
 </template>
@@ -53,13 +54,40 @@ export default {
       rarityLow: 0,
       rarityHigh: 0,
       currentPrice: 0,
+      currentAxis: true,
       isRarityTurnedOn: false,
       pricesForOpenPortalsArrays: []
 
     }
   },
   methods: {
-
+    switchYAxis () {
+      if (this.chartData.datasets[0] !== undefined) {
+        this.currentAxis = !this.currentAxis
+        const datasets = []
+        for (let k = 0; k < this.pricesForOpenPortalsArrays.length; k++) {
+          for (let n = 0; n < this.pricesForOpenPortalsArrays[k].length; n++) {
+            this.pricesForOpenPortalsArrays[k][n] = { x: this.pricesForOpenPortalsArrays[k][n].x, y: this.pricesForOpenPortalsArrays[k][n].GHST, rarity: this.pricesForOpenPortalsArrays[k][n].rarity, GHST: this.pricesForOpenPortalsArrays[k][n].y }
+          }
+          if (this.pricesForOpenPortalsArrays[k].length !== 0) {
+            datasets.push({
+              label: `${this.isRarityTurnedOn === true ? 'custom Rarity' : 'To ' + (350 + k * 60)}`,
+              data: this.pricesForOpenPortalsArrays[k],
+              fill: true,
+              borderColor: this.colorArray[k],
+              backgroundColor: this.colorArray[k],
+              borderWidth: 4,
+              type: 'scatter',
+              yAxisID: 'left-y-axis'
+            })
+          }
+        }
+        this.chartData = {
+          type: 'scatter',
+          datasets: datasets
+        }
+      }
+    },
     async updateGraph () {
       for (var i = 0; i < 7; i++) {
         this.pricesForOpenPortalsArrays[i] = []
@@ -146,7 +174,7 @@ export default {
                   id: 'left-y-axis',
                   ticks: {
                     callback: (value) => {
-                      return `$${value}`
+                      return this.currentAxis ? `$${value}` : `${value} GHST`
                     }
                   },
                   afterBuildTicks: (chartObj) => {
@@ -201,8 +229,8 @@ export default {
                 },
                 afterLabel: (tooltipItem, data) => {
                   const label = ['NFT price: ',
-                    `$${parseInt(tooltipItem.yLabel)}`,
-                    `${parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST)} GHST`,
+                    this.currentAxis ? `$${parseInt(tooltipItem.yLabel)}` : `$${parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST)}`,
+                    this.currentAxis ? `${parseInt(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].GHST)} GHST` : `${parseInt(tooltipItem.yLabel)} GHST`,
                     `Rarity: ${data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].rarity}`
                   ]
 
@@ -236,6 +264,11 @@ export default {
 }
 </script>
 <style scoped>
+.switch_axis{
+  float:left;
+  margin-bottom:-5px;
+  margin-left:20px;
+}
 button{
   width:70px;
   height:25px;
