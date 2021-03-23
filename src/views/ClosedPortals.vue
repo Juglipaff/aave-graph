@@ -43,7 +43,7 @@ export default {
       options: {},
       priceForClosedPortals: [],
       prices: [],
-      currentAxis: true,
+      currentAxis: false,
       currentPrice: 0
     }
   },
@@ -92,7 +92,8 @@ export default {
         for (var i = 0; i < this.closedPortalGraph.length; i++) {
           const day = Math.floor(this.closedPortalGraph[i].timePurchased / 86400) * 86400
           const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-          this.priceForClosedPortals.push({ x: toDateTime(this.closedPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice), GHST: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) })
+          this.priceForClosedPortals.push(this.currentAxis ? { x: toDateTime(this.closedPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice), GHST: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) }
+            : { x: toDateTime(this.closedPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei), GHST: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice) })
         }
 
         this.chartData = {
@@ -192,7 +193,19 @@ export default {
           },
           responsive: true,
           responsiveAnimationDuration: 0,
-          maintainAspectRatio: false
+          maintainAspectRatio: false,
+          plugins: {
+            zoom: {
+              pan: {
+                enabled: true,
+                mode: 'x'
+              },
+              zoom: {
+                enabled: true,
+                mode: 'x'
+              }
+            }
+          }
         }
         this.$Progress.finish()
       })

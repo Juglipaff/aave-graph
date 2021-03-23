@@ -56,7 +56,7 @@ export default {
       rarityLow: 0,
       rarityHigh: 0,
       currentPrice: 0,
-      currentAxis: true,
+      currentAxis: false,
       isRarityTurnedOn: false,
       priceForGotchisArrays: []
 
@@ -113,7 +113,8 @@ export default {
           for (var i = 0; i < this.gotchiGraph.length; i++) {
             const day = Math.floor(this.gotchiGraph[i].timePurchased / 86400) * 86400
             const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-            const pointObj = { x: toDateTime(this.gotchiGraph[i].timePurchased), y: ethers.utils.formatEther(this.gotchiGraph[i].priceInWei) * (price ? price[1] : this.currentPrice), rarity: this.gotchiGraph[i].gotchi.modifiedRarityScore, GHST: ethers.utils.formatEther(this.gotchiGraph[i].priceInWei) }
+            const pointObj = this.currentAxis ? { x: toDateTime(this.gotchiGraph[i].timePurchased), y: ethers.utils.formatEther(this.gotchiGraph[i].priceInWei) * (price ? price[1] : this.currentPrice), rarity: this.gotchiGraph[i].gotchi.modifiedRarityScore, GHST: ethers.utils.formatEther(this.gotchiGraph[i].priceInWei) }
+              : { x: toDateTime(this.gotchiGraph[i].timePurchased), y: ethers.utils.formatEther(this.gotchiGraph[i].priceInWei), rarity: this.gotchiGraph[i].gotchi.modifiedRarityScore, GHST: ethers.utils.formatEther(this.gotchiGraph[i].priceInWei) * (price ? price[1] : this.currentPrice) }
             if (!this.isRarityTurnedOn) {
               if (this.gotchiGraph[i].gotchi.modifiedRarityScore < 350) {
                 this.priceForGotchisArrays[0].push(pointObj)
@@ -239,6 +240,18 @@ export default {
           intersect: false,
           animationDuration: 0
         },
+            plugins: {
+              zoom: {
+                pan: {
+                  enabled: true,
+                  mode: 'x'
+                },
+                zoom: {
+                  enabled: true,
+                  mode: 'x'
+                }
+              }
+            },
             responsive: true,
             responsiveAnimationDuration: 0,
             maintainAspectRatio: false

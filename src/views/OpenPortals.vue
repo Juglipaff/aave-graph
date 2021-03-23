@@ -54,7 +54,7 @@ export default {
       rarityLow: 0,
       rarityHigh: 0,
       currentPrice: 0,
-      currentAxis: true,
+      currentAxis: false,
       isRarityTurnedOn: false,
       pricesForOpenPortalsArrays: []
 
@@ -122,7 +122,8 @@ export default {
             }
             const day = Math.floor(this.openPortalGraph[i].timePurchased / 86400) * 86400
             const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-            const pointObj = { x: toDateTime(this.openPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.openPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice), rarity: maxBRS, GHST: ethers.utils.formatEther(this.openPortalGraph[i].priceInWei) }
+            const pointObj = this.currentAxis ? { x: toDateTime(this.openPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.openPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice), rarity: maxBRS, GHST: ethers.utils.formatEther(this.openPortalGraph[i].priceInWei) }
+              : { x: toDateTime(this.openPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.openPortalGraph[i].priceInWei), rarity: maxBRS, GHST: ethers.utils.formatEther(this.openPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice) }
             if (!this.isRarityTurnedOn) {
               if (maxBRS < 420) {
                 this.pricesForOpenPortalsArrays[0].push(pointObj)
@@ -249,7 +250,19 @@ export default {
         },
             responsive: true,
             responsiveAnimationDuration: 0,
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            plugins: {
+              zoom: {
+                pan: {
+                  enabled: true,
+                  mode: 'x'
+                },
+                zoom: {
+                  enabled: true,
+                  mode: 'x'
+                }
+              }
+            }
           }
 
           this.$Progress.finish()

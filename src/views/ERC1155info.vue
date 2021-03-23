@@ -70,7 +70,7 @@ export default {
       ERC1155ListingsFiltered: [],
       sortMethod: 'Alphabetically',
       liquidity: [],
-      currentAxis: true,
+      currentAxis: false,
       maxPrice: 0
     }
   },
@@ -197,7 +197,7 @@ export default {
     },
 
     filterGraph (id) {
-      this.currentAxis = true
+      this.currentAxis = false
       this.priceForERC1155Filtered = this.priceForERC1155.filter((x) => x.id === id)
       this.updateGraphComponent(`${this.ERC1155List.find((obj) => obj.id === id).name}`)
       this.ERC1155ListingsFiltered = this.ERC1155Listings.filter((x) => x.erc1155TypeId === id)
@@ -233,12 +233,13 @@ export default {
           for (var i = 0; i < this.ERC1155Graph.length; i++) {
             const day = Math.floor(this.ERC1155Graph[i].timeLastPurchased / 86400) * 86400
             const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-            this.priceForERC1155.push({ x: toDateTime(this.ERC1155Graph[i].timeLastPurchased), y: (ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei) * (price ? price[1] : this.currentPrice)).toFixed(2), GHST: ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei), id: this.ERC1155Graph[i].erc1155TypeId, name: this.ERC1155List.find((obj) => obj.id === this.ERC1155Graph[i].erc1155TypeId).name })
+            this.priceForERC1155.push(this.currentAxis ? { x: toDateTime(this.ERC1155Graph[i].timeLastPurchased), y: (ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei) * (price ? price[1] : this.currentPrice)).toFixed(2), GHST: ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei), id: this.ERC1155Graph[i].erc1155TypeId, name: this.ERC1155List.find((obj) => obj.id === this.ERC1155Graph[i].erc1155TypeId).name }
+              : { x: toDateTime(this.ERC1155Graph[i].timeLastPurchased), y: ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei), GHST: (ethers.utils.formatEther(this.ERC1155Graph[i].priceInWei) * (price ? price[1] : this.currentPrice)).toFixed(2), id: this.ERC1155Graph[i].erc1155TypeId, name: this.ERC1155List.find((obj) => obj.id === this.ERC1155Graph[i].erc1155TypeId).name })
             if (parseFloat(this.priceForERC1155[i].y) > this.maxPrice) {
               this.maxPrice = this.priceForERC1155[i].y
             }
           }
-          this.currentAxis = true
+          // this.currentAxis = true
           this.priceForERC1155Filtered = this.priceForERC1155
           this.getLiquidities()
           let graphName = ''
@@ -381,7 +382,19 @@ export default {
           },
         responsive: true,
         responsiveAnimationDuration: 0,
-        maintainAspectRatio: false
+        maintainAspectRatio: false,
+        plugins: {
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: 'x'
+            },
+            zoom: {
+              enabled: true,
+              mode: 'x'
+            }
+          }
+        }
       }
     }
 
