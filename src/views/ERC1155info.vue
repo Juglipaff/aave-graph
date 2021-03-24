@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-
+ <button v-on:click="updateGraph()" class="update">Update</button>
     <br>
      <div v-if="errors.length!==0">
       OOPS... Something went wrong... Check the console for more info<br>
@@ -61,7 +61,15 @@ export default {
     })
   },
   mounted () {
+    window.onkeydown = function (e) {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.view.event.preventDefault()
+      }
+    }
+    this.wrapper = document.getElementById('wrapper')
+    this.wrapperHeight = this.wrapper.offsetHeight * 0.4
     document.addEventListener('keydown', this.keyDown)
+    document.addEventListener('keyup', this.keyUp)
   },
   data () {
     return {
@@ -76,42 +84,49 @@ export default {
       liquidity: [],
       currentListingSelected: -1,
       currentAxis: false,
-      maxPrice: 0
+      maxPrice: 0,
+      arrowKeyPressed: false,
+      wrapper: null,
+      wrapperHeight: 0
     }
   },
   created () {
     this.getERC1155List()
+    this.getERC1155Listings()
     this.updateGraph()
-    // this.getERC1155Listings()
   },
   methods: {
+    keyUp (event) {
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        this.arrowKeyPressed = false
+      }
+    },
     keyDown (event) {
-      if (event.key === 'ArrowUp') {
-        event.preventDefault()
+      if (event.key === 'ArrowUp' && this.arrowKeyPressed === false) {
         const currentIndex = this.ERC1155List.findIndex((a) => a.id === this.currentListingSelected)
         if (this.ERC1155List[currentIndex - 1] !== undefined) {
+          this.arrowKeyPressed = true
           this.filterGraph(this.ERC1155List[currentIndex - 1].id)
           const element = document.getElementById(`${this.ERC1155List[currentIndex - 1].id}`)
-          const wrapper = document.getElementById('wrapper')
-          const top = element.offsetTop - wrapper.offsetHeight * 0.4
-          wrapper.scrollTo({
+          const top = element.offsetTop - this.wrapperHeight
+          this.wrapper.scrollTo({
             top: top,
             behavior: 'smooth'
           })
-        //  element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          setTimeout(() => { this.arrowKeyPressed = false }, 120)
         }
-      } else if (event.key === 'ArrowDown') {
-        event.preventDefault()
+      } else if (event.key === 'ArrowDown' && this.arrowKeyPressed === false) {
         const currentIndex = this.ERC1155List.findIndex((a) => a.id === this.currentListingSelected)
         if (this.ERC1155List[currentIndex + 1] !== undefined) {
+          this.arrowKeyPressed = true
           this.filterGraph(this.ERC1155List[currentIndex + 1].id)
           const element = document.getElementById(`${this.ERC1155List[currentIndex + 1].id}`)
-          const wrapper = document.getElementById('wrapper')
-          const top = element.offsetTop - wrapper.offsetHeight * 0.4
-          document.getElementById('wrapper').scrollTo({
+          const top = element.offsetTop - this.wrapperHeight
+          this.wrapper.scrollTo({
             top: top,
             behavior: 'smooth'
           })
+          setTimeout(() => { this.arrowKeyPressed = false }, 120)
         }
       }
     },
@@ -236,7 +251,6 @@ export default {
         })
       }
     },
-
     filterGraph (id) {
       this.currentListingSelected = id
       this.currentAxis = false
@@ -247,7 +261,7 @@ export default {
     getLiquidities () {
       this.liquidity = []
       for (var i = 0; i < this.ERC1155List.length; i++) {
-        var itemLiquidityValue = this.priceForERC1155Filtered.filter((a) =>
+        var itemLiquidityValue = this.priceForERC1155.filter((a) =>
           this.ERC1155List[i].name === a.name
         ).length
         this.liquidity.push({ name: this.ERC1155List[i].name, liquidityValue: itemLiquidityValue })
@@ -256,7 +270,6 @@ export default {
     async updateGraph () {
       this.$Progress.start()
       this.priceForERC1155 = []
-      await this.getERC1155Listings()
       if (this.GHSTprices.length === 0) {
         await this.$store.dispatch('fetchGHSTPrices')
           .then(() => {
@@ -281,18 +294,21 @@ export default {
               this.maxPrice = this.priceForERC1155[i].y
             }
           }
-          // this.currentAxis = true
-          this.priceForERC1155Filtered = this.priceForERC1155
-          this.getLiquidities()
           let graphName = ''
-          if (this.isWearable === 0) {
-            graphName = 'Wearable Prices'
-          } else if (this.isWearable === 2) {
-            graphName = 'Consumable Prices'
+          if (this.currentListingSelected < 0) {
+            if (this.isWearable === 0) {
+              graphName = 'Wearable Prices'
+            } else if (this.isWearable === 2) {
+              graphName = 'Consumable Prices'
+            } else {
+              graphName = 'Ticket Prices'
+            }
+            this.priceForERC1155Filtered = this.priceForERC1155
           } else {
-            graphName = 'Ticket Prices'
+            graphName = `${this.ERC1155List.find((obj) => obj.id === this.currentListingSelected).name}`
+            this.priceForERC1155Filtered = this.priceForERC1155.filter((x) => x.id === this.currentListingSelected)
           }
-          this.currentListingSelected = -1
+          this.getLiquidities()
           this.updateGraphComponent(graphName)
           this.sortERC1155List()
           this.$Progress.finish()
@@ -446,6 +462,10 @@ export default {
 </script>
 
 <style scoped>
+.update{
+  font-size:17px;
+  height:30px;
+}
 .selectedListing{
   box-shadow:  5px 5px 0px;
 }
