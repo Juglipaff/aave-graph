@@ -108,12 +108,14 @@ export default {
           this.arrowKeyPressed = true
           this.filterGraph(this.ERC1155List[currentIndex - 1].id)
           const element = document.getElementById(`${this.ERC1155List[currentIndex - 1].id}`)
-          const top = element.offsetTop - this.wrapperHeight
-          this.wrapper.scrollTo({
-            top: top,
-            behavior: 'smooth'
-          })
-          setTimeout(() => { this.arrowKeyPressed = false }, 120)
+          if (element !== null) {
+            const top = element.offsetTop - this.wrapperHeight
+            this.wrapper.scrollTo({
+              top: top,
+              behavior: 'smooth'
+            })
+            setTimeout(() => { this.arrowKeyPressed = false }, 120)
+          }
         }
       } else if (event.key === 'ArrowDown' && this.arrowKeyPressed === false) {
         const currentIndex = this.ERC1155List.findIndex((a) => a.id === this.currentListingSelected)
@@ -121,12 +123,14 @@ export default {
           this.arrowKeyPressed = true
           this.filterGraph(this.ERC1155List[currentIndex + 1].id)
           const element = document.getElementById(`${this.ERC1155List[currentIndex + 1].id}`)
-          const top = element.offsetTop - this.wrapperHeight
-          this.wrapper.scrollTo({
-            top: top,
-            behavior: 'smooth'
-          })
-          setTimeout(() => { this.arrowKeyPressed = false }, 120)
+          if (element !== null) {
+            const top = element.offsetTop - this.wrapperHeight
+            this.wrapper.scrollTo({
+              top: top,
+              behavior: 'smooth'
+            })
+            setTimeout(() => { this.arrowKeyPressed = false }, 120)
+          }
         }
       }
     },
@@ -362,18 +366,23 @@ export default {
               ticks: {
                 beginAtZero: true,
                 autoSkip: false,
-                padding: 0,
-                callback: (value) => {
-                  return this.currentAxis ? `$${value}` : `${value} GHST`
-                }
+                padding: 0
               },
-              afterBuildTicks: (chartObj) => {
+              afterUpdate: (chartObj) => {
                 var tickArray = []
-                tickArray.push(0)
-                for (var i = 1; i <= this.maxPrice; i *= 1.7) {
-                  tickArray.push(parseInt(i))
+                var valuesArray = []
+                var tick = 0.25
+                for (var i = 0; tick <= this.maxPrice * this.currentPrice; i++) {
+                  tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
+                  valuesArray.push(tick)
+                  tick = tick * 2
                 }
-                chartObj.ticks = tickArray
+                tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
+                valuesArray.push(tick)
+                chartObj.tickValues = valuesArray
+                chartObj._ticks = tickArray
+                chartObj.width = 80
+                chartObj._ticksToDraw = tickArray
               },
               gridLines: {
                 display: true
@@ -383,16 +392,24 @@ export default {
           ],
           xAxes: [
             {
+              bounds: 'ticks',
               type: 'time',
               time: {
                 unit: 'day',
                 displayFormats: {
-                  day: 'MMM DD'
+                  day: 'MMM DD',
+                  hour: 'HH:MM'
                 }
               },
-              ticks: {
-                beginAtZero: true
+              beforeUpdate: (chartObj) => {
+                chartObj.options.ticks.maxRotation = 0
+                chartObj.options.ticks.autoSkip = true
+                chartObj.options.ticks.autoSkipPadding = 20
+                chartObj.options.time.displayFormats.hour = 'hh:mm'
+                chartObj.options.time.displayFormats.minute = 'hh:mm'
+                chartObj.options.time.displayFormats.minUnit = 'minute'
               },
+
               gridLines: {
                 display: true
               },
@@ -583,8 +600,8 @@ margin-bottom:2px;
   font-size:19px
 }
 .plate{
-    transform-origin: 0px 90px;
-transform: scale(0.95);
+  transform-origin: 0px 100px;
+  transform: scale(0.97);
   transition:0.2s;
   width:230px;
   height:90px;

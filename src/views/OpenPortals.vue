@@ -56,8 +56,8 @@ export default {
       currentPrice: 0,
       currentAxis: false,
       isRarityTurnedOn: false,
-      pricesForOpenPortalsArrays: []
-
+      pricesForOpenPortalsArrays: [],
+      maxPrice: 0
     }
   },
   methods: {
@@ -124,6 +124,9 @@ export default {
             const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
             const pointObj = this.currentAxis ? { x: toDateTime(this.openPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.openPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice), rarity: maxBRS, GHST: ethers.utils.formatEther(this.openPortalGraph[i].priceInWei) }
               : { x: toDateTime(this.openPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.openPortalGraph[i].priceInWei), rarity: maxBRS, GHST: ethers.utils.formatEther(this.openPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice) }
+            if (parseFloat(pointObj.y) > this.maxPrice) {
+              this.maxPrice = pointObj.y
+            }
             if (!this.isRarityTurnedOn) {
               if (maxBRS < 420) {
                 this.pricesForOpenPortalsArrays[0].push(pointObj)
@@ -173,14 +176,21 @@ export default {
                 {
                   type: 'logarithmic',
                   id: 'left-y-axis',
-                  ticks: {
-                    callback: (value) => {
-                      return this.currentAxis ? `$${value}` : `${value} GHST`
+                  afterUpdate: (chartObj) => {
+                    var tickArray = []
+                    var valuesArray = []
+                    var tick = 0.25
+                    for (var i = 0; tick <= this.maxPrice * this.currentPrice; i++) {
+                      tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
+                      valuesArray.push(tick)
+                      tick = tick * 2
                     }
-                  },
-                  afterBuildTicks: (chartObj) => {
-                    const ticks = [0, 10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000]
-                    chartObj.ticks = ticks
+                    tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
+                    valuesArray.push(tick)
+                    chartObj.tickValues = valuesArray
+                    chartObj._ticks = tickArray
+                    chartObj.width = 80
+                    chartObj._ticksToDraw = tickArray
                   },
                   gridLines: {
                     display: true
@@ -197,8 +207,13 @@ export default {
                       day: 'MMM DD'
                     }
                   },
-                  ticks: {
-
+                  beforeUpdate: (chartObj) => {
+                    chartObj.options.ticks.maxRotation = 0
+                    chartObj.options.ticks.autoSkip = true
+                    chartObj.options.ticks.autoSkipPadding = 20
+                    chartObj.options.time.displayFormats.hour = 'hh:mm'
+                    chartObj.options.time.displayFormats.minute = 'hh:mm'
+                    chartObj.options.time.displayFormats.minUnit = 'minute'
                   },
                   gridLines: {
                     display: true
