@@ -11,14 +11,15 @@
     <button class="sort-button" v-on:click="nextSort">Sort: {{sortMethod}}</button>
         <button class="switch_axis" v-on:click="switchYAxis()"> <div v-if="currentAxis">$</div><div v-else>GHST</div> </button>
     <br>
-      <div class="wrapper">
+      <div class="wrapper" id="wrapper">
       <button v-for="ERC1155 in ERC1155List" :class="{
            common: ERC1155.rarityScoreModifier===1,
            uncommon: ERC1155.rarityScoreModifier===2,
            rare: ERC1155.rarityScoreModifier===5,
            legendary: ERC1155.rarityScoreModifier===10,
            mythical: ERC1155.rarityScoreModifier===20,
-           godlike:  ERC1155.rarityScoreModifier===50  }" :key="ERC1155.name" class="plate" v-on:click="filterGraph(ERC1155.id)">
+           godlike:  ERC1155.rarityScoreModifier===50,
+           selectedListing: currentListingSelected===ERC1155.id  }" :id="ERC1155.id" :key="ERC1155.name" class="plate" v-on:click="filterGraph(ERC1155.id)" >
           <button class="favourite" v-on:click="toggleFavorite(ERC1155.id)"><font-awesome-icon  :class="getCurrentFavStatus(ERC1155.id)" :icon="['fas', 'star']"/></button>
         <div class="item-name"><div class="rarity">{{returnRarityString(ERC1155.rarityScoreModifier)}} </div> <div class="name">{{ERC1155.name}}<br> Traded: {{returnLiquidityForItem(ERC1155.name)}} time(s) <span v-if="isWearable!==3"><br>Total Quantity: {{ERC1155.maxQuantity}}</span></div></div>
       </button>
@@ -59,6 +60,9 @@ export default {
       GHSTprices: 'GHSTprices'
     })
   },
+  mounted () {
+    document.addEventListener('keydown', this.keyDown)
+  },
   data () {
     return {
       chartData: {},
@@ -70,17 +74,47 @@ export default {
       ERC1155ListingsFiltered: [],
       sortMethod: 'Alphabetically',
       liquidity: [],
+      currentListingSelected: -1,
       currentAxis: false,
       maxPrice: 0
     }
   },
-
   created () {
     this.getERC1155List()
     this.updateGraph()
     // this.getERC1155Listings()
   },
   methods: {
+    keyDown (event) {
+      if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        const currentIndex = this.ERC1155List.findIndex((a) => a.id === this.currentListingSelected)
+        if (this.ERC1155List[currentIndex - 1] !== undefined) {
+          this.filterGraph(this.ERC1155List[currentIndex - 1].id)
+          const element = document.getElementById(`${this.ERC1155List[currentIndex - 1].id}`)
+          const wrapper = document.getElementById('wrapper')
+          const top = element.offsetTop - wrapper.offsetHeight * 0.4
+          wrapper.scrollTo({
+            top: top,
+            behavior: 'smooth'
+          })
+        //  element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        const currentIndex = this.ERC1155List.findIndex((a) => a.id === this.currentListingSelected)
+        if (this.ERC1155List[currentIndex + 1] !== undefined) {
+          this.filterGraph(this.ERC1155List[currentIndex + 1].id)
+          const element = document.getElementById(`${this.ERC1155List[currentIndex + 1].id}`)
+          const wrapper = document.getElementById('wrapper')
+          const top = element.offsetTop - wrapper.offsetHeight * 0.4
+          document.getElementById('wrapper').scrollTo({
+            top: top,
+            behavior: 'smooth'
+          })
+        }
+      }
+    },
     toEther (wei) {
       return parseFloat(ethers.utils.formatEther(wei)).toFixed(2)
     },
@@ -112,7 +146,7 @@ export default {
       }
     },
     toggleFavorite (id) {
-      const currentFavouriteStatus = localStorage.getItem(id)
+      const currentFavouriteStatus = localStorage.getItem(`{id:${id},category:${this.isWearable}`)
       if (currentFavouriteStatus === null || currentFavouriteStatus === undefined) {
         localStorage.setItem(`{id:${id},category:${this.isWearable}`, false)
         return
@@ -194,9 +228,17 @@ export default {
           return 1
         })
       }
+      const currentIndex = this.ERC1155List.findIndex((a) => a.id === this.currentListingSelected)
+      if (currentIndex !== -1) {
+        requestAnimationFrame(() => {
+          const element = document.getElementById(`${this.ERC1155List[currentIndex].id}`)
+          element.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        })
+      }
     },
 
     filterGraph (id) {
+      this.currentListingSelected = id
       this.currentAxis = false
       this.priceForERC1155Filtered = this.priceForERC1155.filter((x) => x.id === id)
       this.updateGraphComponent(`${this.ERC1155List.find((obj) => obj.id === id).name}`)
@@ -250,6 +292,7 @@ export default {
           } else {
             graphName = 'Ticket Prices'
           }
+          this.currentListingSelected = -1
           this.updateGraphComponent(graphName)
           this.sortERC1155List()
           this.$Progress.finish()
@@ -403,6 +446,9 @@ export default {
 </script>
 
 <style scoped>
+.selectedListing{
+  box-shadow:  5px 5px 0px;
+}
 .switch_axis{
   height:30px;
   width:60px;
@@ -515,6 +561,7 @@ margin-bottom:2px;
   font-size:19px
 }
 .plate{
+    transition:0.2s;
   width:230px;
   height:90px;
   border: 2px solid black;
