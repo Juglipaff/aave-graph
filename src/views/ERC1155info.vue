@@ -467,6 +467,7 @@ export default {
   height:30px;
 }
 .selectedListing{
+  transform: scale(1.01) !important;
   box-shadow:  5px 5px 0px;
 }
 .switch_axis{
@@ -488,7 +489,8 @@ export default {
 .favourite{
   position:absolute;
   font-size:20px;
-  left:21px;
+  margin-left:-111px;
+  width:5px;
   margin-top:2px;
   background-color:transparent;
   border:0px;
@@ -581,11 +583,13 @@ margin-bottom:2px;
   font-size:19px
 }
 .plate{
-    transition:0.2s;
+    transform-origin: 0px 90px;
+transform: scale(0.95);
+  transition:0.2s;
   width:230px;
   height:90px;
   border: 2px solid black;
-  margin-top:3px;
+  margin-top:5px;
   border-radius: 5px;
   display:block;
   background-color:white;
