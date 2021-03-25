@@ -393,7 +393,6 @@ export default {
           ],
           xAxes: [
             {
-              bounds: 'ticks',
               type: 'time',
               time: {
                 unit: 'day',
