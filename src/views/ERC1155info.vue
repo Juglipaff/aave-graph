@@ -92,7 +92,7 @@ export default {
   },
   created () {
     this.getERC1155List()
-    this.getERC1155Listings()
+    // this.getERC1155Listings()
     this.updateGraph()
   },
   methods: {
@@ -257,7 +257,7 @@ export default {
     },
     filterGraph (id) {
       this.currentListingSelected = id
-      this.currentAxis = false
+      // this.currentAxis = false
       this.priceForERC1155Filtered = this.priceForERC1155.filter((x) => x.id === id)
       this.updateGraphComponent(`${this.ERC1155List.find((obj) => obj.id === id).name}`)
       this.ERC1155ListingsFiltered = this.ERC1155Listings.filter((x) => x.erc1155TypeId === id)
@@ -274,6 +274,7 @@ export default {
     async updateGraph () {
       this.$Progress.start()
       this.priceForERC1155 = []
+      await this.getERC1155Listings()
       if (this.GHSTprices.length === 0) {
         await this.$store.dispatch('fetchGHSTPrices')
           .then(() => {
@@ -308,12 +309,11 @@ export default {
               graphName = 'Ticket Prices'
             }
             this.priceForERC1155Filtered = this.priceForERC1155
+            this.updateGraphComponent(graphName)
           } else {
-            graphName = `${this.ERC1155List.find((obj) => obj.id === this.currentListingSelected).name}`
-            this.priceForERC1155Filtered = this.priceForERC1155.filter((x) => x.id === this.currentListingSelected)
+            this.filterGraph(this.currentListingSelected)
           }
           this.getLiquidities()
-          this.updateGraphComponent(graphName)
           this.sortERC1155List()
           this.$Progress.finish()
         }).catch(() => {
@@ -321,11 +321,12 @@ export default {
         })
     },
     switchYAxis () {
+      this.currentAxis = !this.currentAxis
       if (this.chartData.datasets[0] !== undefined) {
-        this.currentAxis = !this.currentAxis
-        for (var i = 0; i < this.priceForERC1155Filtered.length; i++) {
-          this.priceForERC1155Filtered[i] = { x: this.priceForERC1155Filtered[i].x, y: this.priceForERC1155Filtered[i].GHST, GHST: this.priceForERC1155Filtered[i].y, id: this.priceForERC1155Filtered[i].id, name: this.priceForERC1155Filtered[i].name }
+        for (var i = 0; i < this.priceForERC1155.length; i++) {
+          this.priceForERC1155[i] = { x: this.priceForERC1155[i].x, y: this.priceForERC1155[i].GHST, GHST: this.priceForERC1155[i].y, id: this.priceForERC1155[i].id, name: this.priceForERC1155[i].name }
         }
+        this.filterGraph(this.currentListingSelected)
         this.chartData = {
           type: 'scatter',
           datasets: [
