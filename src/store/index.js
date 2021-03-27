@@ -5,6 +5,20 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios'
 
+/* async function login () {
+  await window.ethereum.enable()
+  const provider = new ethers.providers.Web3Provider(window.ethereum)
+  const signer = provider.getSigner()
+  await signer.signMessage('apple')
+  .then(()=>{
+    console.log(await signer.getAddress())
+  })
+  .catch((err)=>{
+    console.log(await signer.getAddress())
+  })
+  console.log(await signer.getAddress())
+}
+login() */
 async function sendGraphRequest (graphQuery) {
   const result = await axios({
     url: 'https://api.thegraph.com/subgraphs/name/aavegotchi/aavegotchi-core-matic',

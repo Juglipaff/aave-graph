@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-     Closed portals left: {{closedPortalsQuantity}}, Current GHST price: {{currentPrice}}
+     Closed portals left: {{closedPortalsQuantity}}
     <div v-if="errors.length!==0">
       OOPS... Something went wrong... Check the console for more info<br>
       <div v-for="error in errors" :key="error.message">
@@ -41,7 +41,7 @@ export default {
       closedPortalGraph: 'closedPortalGraph',
       errors: 'errors',
       GHSTprices: 'GHSTprices',
-      CurrentGHSTprice: 'CurrentGHSTprice'
+      currentPrice: 'CurrentGHSTprice'
     })
   },
   data () {
@@ -51,8 +51,11 @@ export default {
       priceForClosedPortals: [],
       prices: [],
       currentAxis: false,
-      currentPrice: 0,
-      maxPrice: 0
+      maxPrice: 0,
+      // minYValue: 0,
+      // maxYValue: 0,
+      maxDate: new Date(),
+      minDate: toDateTime(1614687822)
     }
   },
   methods: {
@@ -106,9 +109,6 @@ export default {
         this.prices = this.GHSTprices
       }
       await this.$store.dispatch('fetchCurentGHSTPrice')
-        .then(() => {
-          this.currentPrice = this.CurrentGHSTprice
-        })
         .catch((err) => {
           console.log(err)
         })
@@ -116,8 +116,9 @@ export default {
         for (var i = 0; i < this.closedPortalGraph.length; i++) {
           const day = Math.floor(this.closedPortalGraph[i].timePurchased / 86400) * 86400
           const price = this.prices.find((obj) => { return obj[0] * 0.001 === day })
-          this.priceForClosedPortals.push(this.currentAxis ? { x: toDateTime(this.closedPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice), GHST: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) }
-            : { x: toDateTime(this.closedPortalGraph[i].timePurchased), y: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei), GHST: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice) })
+          const dateTime = toDateTime(this.closedPortalGraph[i].timePurchased)
+          this.priceForClosedPortals.push(this.currentAxis ? { x: dateTime, y: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice), GHST: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) }
+            : { x: dateTime, y: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei), GHST: ethers.utils.formatEther(this.closedPortalGraph[i].priceInWei) * (price ? price[1] : this.currentPrice) })
           if (parseFloat(this.priceForClosedPortals[i].y) > this.maxPrice) {
             this.maxPrice = this.priceForClosedPortals[i].y
           }
@@ -147,18 +148,19 @@ export default {
                 afterUpdate: (chartObj) => {
                   var tickArray = []
                   var valuesArray = []
-                  var tick = 0.25
-                  for (var i = 0; tick <= this.maxPrice * this.currentPrice; i++) {
+                  var tick = parseInt(this.maxPrice)
+                  for (var i = 0; tick !== 0.25; i++) {
                     tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
                     valuesArray.push(tick)
-                    tick = tick * 2
+                    tick = (tick < 2) ? tick * 0.5 : parseInt(tick * 0.5)
                   }
-                  tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
-                  valuesArray.push(tick)
                   chartObj.tickValues = valuesArray
                   chartObj._ticks = tickArray
                   chartObj.width = 80
                   chartObj._ticksToDraw = tickArray
+                  // chartObj.min = this.minYValue
+                //  chartObj.max = this.maxYValue
+                  // console.log(chartObj)
                 },
                 gridLines: {
                   display: true
@@ -236,11 +238,27 @@ export default {
             zoom: {
               pan: {
                 enabled: true,
-                mode: 'x'
+                mode: 'x',
+                rangeMax: {
+                  x: this.maxDate
+                },
+                rangeMin: {
+                  x: this.minDate
+                },
+                onPan: (chart) => {
+                //  this.minYValue = chart.chart.chartArea.bottom
+                  // this.maxYValue = chart.chart.chartArea.right
+                }
               },
               zoom: {
                 enabled: true,
-                mode: 'x'
+                mode: 'x',
+                rangeMin: { x: this.minDate },
+                rangeMax: { x: this.maxDate },
+                onZoom: (chart) => {
+                //  this.minYValue = chart.chart.chartArea.bottom
+                  // this.maxYValue = chart.chart.chartArea.right
+                }
               }
             }
           }

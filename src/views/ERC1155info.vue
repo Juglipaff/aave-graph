@@ -1,6 +1,6 @@
 <template>
     <div class="container">
- <button v-on:click="updateGraph()" class="update">Update</button>
+    <button v-on:click="updateGraph()" class="update">Update</button>
     <br>
      <div v-if="errors.length!==0">
       OOPS... Something went wrong... Check the console for more info<br>
@@ -57,7 +57,8 @@ export default {
       ERC1155Graph: 'ERC1155Graph',
       ERC1155Listings: 'ERC1155Listings',
       errors: 'errors',
-      GHSTprices: 'GHSTprices'
+      GHSTprices: 'GHSTprices',
+      currentPrice: 'CurrentGHSTprice'
     })
   },
   mounted () {
@@ -77,7 +78,6 @@ export default {
       options: {},
       priceForERC1155: [],
       prices: [],
-      currentPrice: 0,
       priceForERC1155Filtered: [],
       ERC1155ListingsFiltered: [],
       sortMethod: 'Alphabetically',
@@ -87,12 +87,13 @@ export default {
       maxPrice: 0,
       arrowKeyPressed: false,
       wrapper: null,
-      wrapperHeight: 0
+      wrapperHeight: 0,
+      maxDate: new Date(),
+      minDate: this.isWearable !== 3 ? toDateTime(1614687822) : toDateTime(1616117822)
     }
   },
   created () {
     this.getERC1155List()
-    // this.getERC1155Listings()
     this.updateGraph()
   },
   methods: {
@@ -257,8 +258,15 @@ export default {
     },
     filterGraph (id) {
       if (id !== -1) {
+        this.minDate = this.maxDate
         this.currentListingSelected = id
         this.priceForERC1155Filtered = this.priceForERC1155.filter((x) => x.id === id)
+        for (var i = 0; i < this.priceForERC1155Filtered.length; i++) {
+          var time = parseInt(((this.priceForERC1155Filtered[i].x).getTime() / 1000).toFixed(0))
+          if (time < this.minDate) {
+            this.minDate = toDateTime(time - 20000)
+          }
+        }
         this.updateGraphComponent(`${this.ERC1155List.find((obj) => obj.id === id).name}`)
         this.ERC1155ListingsFiltered = this.ERC1155Listings.filter((x) => x.erc1155TypeId === id)
       }
@@ -287,7 +295,10 @@ export default {
       } else {
         this.prices = this.GHSTprices
       }
-      this.currentPrice = this.prices[this.prices.length - 1] ? this.prices[this.prices.length - 1][1] : 0
+      await this.$store.dispatch('fetchCurentGHSTPrice')
+        .catch((err) => {
+          console.log(err)
+        })
       await this.$store.dispatch('fetchERC1155Graph', this.isWearable)
         .then(() => {
           for (var i = 0; i < this.ERC1155Graph.length; i++) {
@@ -374,14 +385,13 @@ export default {
               afterUpdate: (chartObj) => {
                 var tickArray = []
                 var valuesArray = []
-                var tick = 0.25
-                for (var i = 0; tick <= this.maxPrice * this.currentPrice; i++) {
+                var tick = parseInt(this.maxPrice)
+                for (var i = 0; tick !== 0.125; i++) {
                   tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
                   valuesArray.push(tick)
-                  tick = tick * 2
+                  tick = (tick < 2) ? tick * 0.5 : parseInt(tick * 0.5)
                 }
-                tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
-                valuesArray.push(tick)
+
                 chartObj.tickValues = valuesArray
                 chartObj._ticks = tickArray
                 chartObj.width = 80
@@ -465,11 +475,23 @@ export default {
           zoom: {
             pan: {
               enabled: true,
-              mode: 'x'
+              mode: 'x',
+              rangeMax: {
+                x: this.maxDate
+              },
+              rangeMin: {
+                x: this.minDate
+              }
             },
             zoom: {
               enabled: true,
-              mode: 'x'
+              mode: 'x',
+              rangeMax: {
+                x: this.maxDate
+              },
+              rangeMin: {
+                x: this.minDate
+              }
             }
           }
         }

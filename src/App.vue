@@ -7,16 +7,37 @@
       <router-link to="/wearables">Wearables</router-link>
       <router-link to="/consumables">Consumables</router-link>
       <router-link to="/tickets">Tickets</router-link>
+      <span id="priceGHST"> GHST price: <span id="price-display">{{currentPrice}}$ </span></span>
     </div>
     <vue-progress-bar></vue-progress-bar>
     <router-view :key="$route.fullPath"/>
   </div>
 </template>
 
+<script>
+import { mapState } from 'vuex'
+
+export default {
+  computed: {
+    ...mapState({
+      currentPrice: 'CurrentGHSTprice'
+    })
+  }
+}
+</script>
+
 <style>
 *{  margin:0;}
 .container{
   margin-top:110px;
+}
+#price-display{
+  color: rgb(255, 255, 255);
+}
+#priceGHST{
+  color: rgb(173, 218, 255);
+position: absolute;
+right:100px;
 }
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;

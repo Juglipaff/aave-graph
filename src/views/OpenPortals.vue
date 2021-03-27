@@ -32,7 +32,8 @@ export default {
     ...mapState({
       openPortalGraph: 'openPortalGraph',
       errors: 'errors',
-      GHSTprices: 'GHSTprices'
+      GHSTprices: 'GHSTprices',
+      currentPrice: 'CurrentGHSTprice'
     })
   },
   data () {
@@ -53,11 +54,12 @@ export default {
       prices: [],
       rarityLow: 0,
       rarityHigh: 0,
-      currentPrice: 0,
       currentAxis: false,
       isRarityTurnedOn: false,
       pricesForOpenPortalsArrays: [],
-      maxPrice: 0
+      maxPrice: 0,
+      maxDate: new Date(),
+      minDate: toDateTime(1614687822)
     }
   },
   methods: {
@@ -105,7 +107,10 @@ export default {
       } else {
         this.prices = this.GHSTprices
       }
-      this.currentPrice = this.prices[this.prices.length - 1][1]
+      await this.$store.dispatch('fetchCurentGHSTPrice')
+        .catch((err) => {
+          console.log(err)
+        })
       await this.$store.dispatch('fetchOpenPortalGraph')
         .then(() => {
           for (var i = 0; i < this.openPortalGraph.length; i++) {
@@ -179,17 +184,17 @@ export default {
                   afterUpdate: (chartObj) => {
                     var tickArray = []
                     var valuesArray = []
-                    var tick = 0.25
-                    for (var i = 0; tick <= this.maxPrice * this.currentPrice; i++) {
+                    var tick = parseInt(this.maxPrice)
+                    for (var i = 0; tick !== 0.25; i++) {
                       tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
                       valuesArray.push(tick)
-                      tick = tick * 2
+                      tick = (tick < 2) ? tick * 0.5 : parseInt(tick * 0.5)
                     }
                     tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
                     valuesArray.push(tick)
                     chartObj.tickValues = valuesArray
                     chartObj._ticks = tickArray
-                    chartObj.width = 80
+                    chartObj.width = 100
                     chartObj._ticksToDraw = tickArray
                   },
                   gridLines: {
@@ -270,11 +275,23 @@ export default {
               zoom: {
                 pan: {
                   enabled: true,
-                  mode: 'x'
+                  mode: 'x',
+                  rangeMax: {
+                    x: this.maxDate
+                  },
+                  rangeMin: {
+                    x: this.minDate
+                  }
                 },
                 zoom: {
                   enabled: true,
-                  mode: 'x'
+                  mode: 'x',
+                  rangeMax: {
+                    x: this.maxDate
+                  },
+                  rangeMin: {
+                    x: this.minDate
+                  }
                 }
               }
             }

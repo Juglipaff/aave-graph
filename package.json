@@ -13,6 +13,7 @@
     "@fortawesome/vue-fontawesome": "^2.0.2",
     "axios": "^0.21.1",
     "chart.js": "^2.9.4",
+    "chartjs-plugin-downsample": "^1.1.0",
     "chartjs-plugin-zoom": "^0.7.7",
     "core-js": "^3.6.5",
     "vue": "^2.6.11",
