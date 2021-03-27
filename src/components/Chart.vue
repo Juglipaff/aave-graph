@@ -26,7 +26,7 @@ export default {
         }
       },
       beforeUpdate: function (chart) {
-        chart.downsample(1000)
+        chart.downsample(2000)
       }
     })
     this.addPlugin(zoom)
