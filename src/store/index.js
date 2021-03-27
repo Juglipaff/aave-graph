@@ -29,6 +29,13 @@ async function getClosedPortalsQuantity () {
   return (10000 - parseInt(portalsOpened.data.statistic.portalsOpened))
 }
 
+async function getCurrentPriceGHST () {
+  const price = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=aavegotchi&vs_currencies=usd')
+    .catch((error) => {
+      console.log(error)
+    })
+  return parseFloat(price.data.aavegotchi.usd)
+}
 async function getHistoricalPricesGHST () {
   const prices = await axios.get('https://api.coingecko.com/api/v3/coins/aavegotchi/market_chart?vs_currency=usd&days=max&interval=daily')
     .catch((error) => {
@@ -256,6 +263,7 @@ export default new Vuex.Store({
     ERC1155Listings: [],
     GHSTprices: [],
     closedPortalsQuantity: 0,
+    CurrentGHSTprice: 0,
     errors: []
   },
   mutations: {
@@ -293,6 +301,10 @@ export default new Vuex.Store({
     },
     SET_GHST_PRICES (state, prices) {
       state.GHSTprices = prices
+      state.errors = []
+    },
+    SET_CURRENT_GHST_PRICE (state, price) {
+      state.CurrentGHSTprice = price
       state.errors = []
     },
     SET_ERRORS (state, errorData) {
@@ -360,6 +372,13 @@ export default new Vuex.Store({
     fetchGHSTPrices ({ commit }) {
       return getHistoricalPricesGHST().then(response => {
         commit('SET_GHST_PRICES', response)
+      }).catch(error => {
+        commit('SET_ERRORS', error)
+      })
+    },
+    fetchCurentGHSTPrice ({ commit }) {
+      return getCurrentPriceGHST().then(response => {
+        commit('SET_CURRENT_GHST_PRICE', response)
       }).catch(error => {
         commit('SET_ERRORS', error)
       })

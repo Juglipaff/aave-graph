@@ -2,7 +2,6 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Gotchi from '../views/Gotchi.vue'
 import ClosedPortals from '../views/ClosedPortals.vue'
-import ClosedPortalsBazaar from '../views/ClosedPortalsBazaar.vue'
 import OpenPortals from '../views/OpenPortals.vue'
 import ERC1155 from '../views/ERC1155info.vue'
 // import Consumables from '../views/Consumables.vue'
@@ -19,11 +18,6 @@ const routes = [
     path: '/closed-portals',
     name: 'ClosedPortals',
     component: ClosedPortals
-  },
-  {
-    path: '/closed-portals-bazaar',
-    name: 'ClosedPortalsBazaar',
-    component: ClosedPortalsBazaar
   },
   {
     path: '/opened-portals',

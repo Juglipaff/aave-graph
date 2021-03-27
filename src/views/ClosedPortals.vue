@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-     Closed portals left: {{closedPortalsQuantity}}
+     Closed portals left: {{closedPortalsQuantity}}, Current GHST price: {{currentPrice}}
     <div v-if="errors.length!==0">
       OOPS... Something went wrong... Check the console for more info<br>
       <div v-for="error in errors" :key="error.message">
@@ -9,6 +9,11 @@
     </div>
       <button class="switch_axis" v-on:click="switchYAxis()"> <div v-if="currentAxis">$</div><div v-else>GHST</div> </button>
     <chart v-bind:chartData="chartData" v-bind:options="options" id="chart"/>
+      <div class="links-wrapper">
+    <a v-for="listing in closedPortalListings" :key="listing.link" target="_blank" :href="`https://aavegotchi.com/baazaar/erc721/${listing.id}`">
+    {{fromWei(listing.priceInWei)}} GHST, ${{parseInt(fromWei(listing.priceInWei)*currentPrice)}}<br>
+    </a>
+   </div>
   </div>
 </template>
 <script>
@@ -32,9 +37,11 @@ export default {
   computed: {
     ...mapState({
       closedPortalsQuantity: 'closedPortalsQuantity',
+      closedPortalListings: 'closedPortalListings',
       closedPortalGraph: 'closedPortalGraph',
       errors: 'errors',
-      GHSTprices: 'GHSTprices'
+      GHSTprices: 'GHSTprices',
+      CurrentGHSTprice: 'CurrentGHSTprice'
     })
   },
   data () {
@@ -49,6 +56,17 @@ export default {
     }
   },
   methods: {
+    fromWei (wei) {
+      return parseInt(ethers.utils.formatEther(wei))
+    },
+    sortPortals () {
+      this.closedPortalListings.sort((a, b) => {
+        if (this.fromWei(b.priceInWei) < this.fromWei(a.priceInWei)) {
+          return 1
+        }
+        return -1
+      })
+    },
     switchYAxis () {
       if (this.chartData.datasets[0] !== undefined) {
         this.currentAxis = !this.currentAxis
@@ -75,7 +93,6 @@ export default {
     async updateGraph () {
       this.priceForClosedPortals = []
       this.$Progress.start()
-      this.$store.dispatch('fetchClosedPortalQuantity')
       if (this.GHSTprices.length === 0) {
         await this.$store.dispatch('fetchGHSTPrices')
           .then(() => {
@@ -88,7 +105,13 @@ export default {
       } else {
         this.prices = this.GHSTprices
       }
-      this.currentPrice = this.prices[this.prices.length - 1][1]
+      await this.$store.dispatch('fetchCurentGHSTPrice')
+        .then(() => {
+          this.currentPrice = this.CurrentGHSTprice
+        })
+        .catch((err) => {
+          console.log(err)
+        })
       await this.$store.dispatch('fetchPortalGraph').then(() => {
         for (var i = 0; i < this.closedPortalGraph.length; i++) {
           const day = Math.floor(this.closedPortalGraph[i].timePurchased / 86400) * 86400
@@ -228,17 +251,39 @@ export default {
     }
   },
   created () {
+    this.$store.dispatch('fetchClosedPortalListing')
+      .then(() => {
+        console.log(`Listing length: ${this.closedPortalListings.length}`)
+        this.sortPortals()
+      })
+    this.$store.dispatch('fetchClosedPortalQuantity')
     this.updateGraph()
   }
 }
 </script>
 <style scoped>
+.links-wrapper{
+ margin-top:25px;
+ margin-right:0;
+  margin-left:0;
+  height:calc(100vh - 230px);
+  overflow-y:scroll;
+   width:290px;
+   padding-left:5px;
+   float:left;
+   left:0px;
+}
 .switch_axis{
-  float:left;
+  position:absolute;
+  left:0;
   margin-left:30px;
 }
 #chart{
+  float:left;
   margin-top:30px;
+  margin-left:20px;
+  width:calc(100vw - 340px);
+  height:calc(100vh - 205px);
 }
 button{
   width:70px;
