@@ -19,14 +19,13 @@ window.ethereum.on('accountsChanged', (accounts) => {
 })
 
 async function login () {
-  await window.ethereum.request({ method: 'eth_accounts' })
+  await window.ethereum.enable()
     .then((accounts) => {
       currentAccount = accounts[0]
     })
     .catch((err) => {
       console.error(err)
     })
-  // await window.ethereum.enable()
   const provider = new ethers.providers.Web3Provider(window.ethereum)
   const contractAddress = '0xb17fC75fc6e054EdA65c32B5a0c26187Dd62955f'
   const contract = new ethers.Contract(contractAddress, abi, provider)
