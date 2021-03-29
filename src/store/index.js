@@ -1,24 +1,42 @@
-// import { ethers } from 'ethers'
+import { ethers } from 'ethers'
 // import Web3 from 'web3'
-
+import abi from '../premiumAddresses.json'
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios'
 
-/* async function login () {
-  await window.ethereum.enable()
+window.ethereum.on('chainChanged', (_chainId) => {
+  window.location.reload()
+})
+
+let currentAccount = ''
+window.ethereum.on('accountsChanged', (accounts) => {
+  if (accounts.length === 0) {
+    console.log('Please connect to MetaMask.')
+  } else if (accounts[0] !== currentAccount) {
+    store.dispatch('fetchIsRegistered')
+  }
+})
+
+async function login () {
+  await window.ethereum.request({ method: 'eth_accounts' })
+    .then((accounts) => {
+      currentAccount = accounts[0]
+    })
+    .catch((err) => {
+      console.error(err)
+    })
+  // await window.ethereum.enable()
   const provider = new ethers.providers.Web3Provider(window.ethereum)
+  const contractAddress = '0xb17fC75fc6e054EdA65c32B5a0c26187Dd62955f'
+  const contract = new ethers.Contract(contractAddress, abi, provider)
   const signer = provider.getSigner()
-  await signer.signMessage('apple')
-  .then(()=>{
-    console.log(await signer.getAddress())
-  })
-  .catch((err)=>{
-    console.log(await signer.getAddress())
-  })
-  console.log(await signer.getAddress())
+  const currentAddress = await signer.getAddress()
+  const isRegistered = await contract.registeredAddresses(currentAddress)
+  console.log(isRegistered)
+  return isRegistered
 }
-login() */
+
 async function sendGraphRequest (graphQuery) {
   const result = await axios({
     url: 'https://api.thegraph.com/subgraphs/name/aavegotchi/aavegotchi-core-matic',
@@ -265,8 +283,7 @@ async function getERC1155Listings (isWearable) {
 }
 
 Vue.use(Vuex)
-
-export default new Vuex.Store({
+const store = new Vuex.Store({
   state: {
     gotchiGraph: [],
     closedPortalGraph: [],
@@ -278,6 +295,7 @@ export default new Vuex.Store({
     GHSTprices: [],
     closedPortalsQuantity: 0,
     CurrentGHSTprice: 0,
+    user: null,
     errors: []
   },
   mutations: {
@@ -319,6 +337,10 @@ export default new Vuex.Store({
     },
     SET_CURRENT_GHST_PRICE (state, price) {
       state.CurrentGHSTprice = price
+      state.errors = []
+    },
+    SET_USER_DATA (state, user) {
+      state.user = user
       state.errors = []
     },
     SET_ERRORS (state, errorData) {
@@ -396,6 +418,14 @@ export default new Vuex.Store({
       }).catch(error => {
         commit('SET_ERRORS', error)
       })
+    },
+    fetchIsRegistered ({ commit }) {
+      return login().then(response => {
+        commit('SET_USER_DATA', response)
+      }).catch(error => {
+        commit('SET_ERRORS', error)
+      })
     }
   }
 })
+export default store

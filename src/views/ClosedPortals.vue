@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-     Closed portals left: {{closedPortalsQuantity}}
+    Closed portals left: {{closedPortalsQuantity}}
     <div v-if="errors.length!==0">
       OOPS... Something went wrong... Check the console for more info<br>
       <div v-for="error in errors" :key="error.message">
@@ -9,10 +9,23 @@
     </div>
       <button class="switch_axis" v-on:click="switchYAxis()"> <div v-if="currentAxis">$</div><div v-else>GHST</div> </button>
     <chart v-bind:chartData="chartData" v-bind:options="options" id="chart"/>
-      <div class="links-wrapper">
+      <div v-if="isRegistered" class="links-wrapper">
     <a v-for="listing in closedPortalListings" :key="listing.link" target="_blank" :href="`https://aavegotchi.com/baazaar/erc721/${listing.id}`">
     {{fromWei(listing.priceInWei)}} GHST, ${{parseInt(fromWei(listing.priceInWei)*currentPrice)}}<br>
     </a>
+   </div>
+   <div v-else-if="isRegistered===false" class="placeholder">
+     <div class="container3">
+     <font-awesome-icon  class="lock" :icon="['fas', 'lock']"/>
+     <div class="message">Sorry, you do not have enough rights to view listings.</div>
+     </div>
+   </div>
+   <div v-else class="placeholder">
+     <div class="container2">
+     <font-awesome-icon  class="lock" :icon="['fas', 'lock']"/>
+     <div class="message">Please login with your Metamask account to view listings</div>
+     <button class="MetamaskLogin" v-on:click="checkLogin">Login with Metamask</button>
+     </div>
    </div>
   </div>
 </template>
@@ -41,7 +54,8 @@ export default {
       closedPortalGraph: 'closedPortalGraph',
       errors: 'errors',
       GHSTprices: 'GHSTprices',
-      currentPrice: 'CurrentGHSTprice'
+      currentPrice: 'CurrentGHSTprice',
+      isRegistered: 'user'
     })
   },
   data () {
@@ -58,7 +72,22 @@ export default {
       minDate: toDateTime(1614687822)
     }
   },
+  watch: {
+    isRegistered: function (val) {
+      if (val) {
+        this.$store.dispatch('fetchClosedPortalListing')
+          .then(() => {
+            console.log(`Listing length: ${this.closedPortalListings.length}`)
+            this.sortPortals()
+          })
+      }
+    }
+  },
   methods: {
+
+    checkLogin () {
+      this.$store.dispatch('fetchIsRegistered')
+    },
     fromWei (wei) {
       return parseInt(ethers.utils.formatEther(wei))
     },
@@ -269,17 +298,20 @@ export default {
     }
   },
   created () {
-    this.$store.dispatch('fetchClosedPortalListing')
-      .then(() => {
-        console.log(`Listing length: ${this.closedPortalListings.length}`)
-        this.sortPortals()
-      })
+    if (this.isRegistered) {
+      this.$store.dispatch('fetchClosedPortalListing')
+        .then(() => {
+          console.log(`Listing length: ${this.closedPortalListings.length}`)
+          this.sortPortals()
+        })
+    }
     this.$store.dispatch('fetchClosedPortalQuantity')
     this.updateGraph()
   }
 }
 </script>
 <style scoped>
+
 .links-wrapper{
  margin-top:25px;
  margin-right:0;
@@ -294,6 +326,8 @@ export default {
 .switch_axis{
   position:absolute;
   left:0;
+    width:70px;
+  height:25px;
   margin-left:30px;
 }
 #chart{
@@ -303,9 +337,5 @@ export default {
   width:calc(100vw - 340px);
   height:calc(100vh - 205px);
 }
-button{
-  width:70px;
-  height:25px;
 
-}
 </style>

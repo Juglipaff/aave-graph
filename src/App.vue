@@ -40,6 +40,7 @@ position: absolute;
 right:100px;
 }
 #app {
+  overflow: hidden;
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -75,5 +76,47 @@ border-bottom: 1px solid white
 }
 #chart{
   width:98%
+}
+.container3{
+ position: relative;
+ top:calc(50% - 90px);
+}
+.MetamaskLogin{
+  position:relative;
+  width:180px;
+  height:60px;
+  top:-40px;
+  color:white;
+  font-size:17px;
+  background-color:#0088cc;
+  border-radius: 15px;
+  border: 0px;
+}
+.container2{
+ position: relative;
+ top:calc(50% - 110px);
+}
+.message{
+   color:white;
+  top:-20px;
+  margin:40px;
+  font-size:20px;
+  position: relative;
+}
+.lock{
+   color:white;
+  position: relative;
+  font-size:70px;
+}
+.placeholder{
+  position:absolute;
+  top:80px;
+  right:0;
+  margin-left:10px;
+  height:calc(100vh - 80px);
+  width:290px;
+  background: rgba(32, 32, 32, 1);
+  box-shadow: 0 0px 32px 0 rgba( 31, 38, 135, 0.07 );
+  border-radius: 0px;
 }
 </style>

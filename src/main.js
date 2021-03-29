@@ -5,9 +5,9 @@ import store from './store'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import VueProgressBar from 'vue-progressbar'
-import { faStar } from '@fortawesome/free-solid-svg-icons'
+import { faStar, faLock } from '@fortawesome/free-solid-svg-icons'
 Vue.config.productionTip = false
-library.add(faStar)
+library.add(faStar, faLock)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.use(VueProgressBar, {
   color: 'rgb(255, 255, 255)',

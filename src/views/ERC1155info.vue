@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-    <button v-on:click="updateGraph()" class="update">Update</button>
+    <button v-on:click="updateGraphAndListings()" class="update">Update</button>
     <br>
      <div v-if="errors.length!==0">
       OOPS... Something went wrong... Check the console for more info<br>
@@ -19,17 +19,30 @@
            legendary: ERC1155.rarityScoreModifier===10,
            mythical: ERC1155.rarityScoreModifier===20,
            godlike:  ERC1155.rarityScoreModifier===50,
-           selectedListing: currentListingSelected===ERC1155.id  }" :id="ERC1155.id" :key="ERC1155.name" class="plate" v-on:click="filterGraph(ERC1155.id)" >
+           selectedListing: currentListingSelected===ERC1155.id  }" :id="ERC1155.id" :key="ERC1155.name" class="plate" v-on:click="filterAll(ERC1155.id)" >
           <button class="favourite" v-on:click="toggleFavorite(ERC1155.id)"><font-awesome-icon  :class="getCurrentFavStatus(ERC1155.id)" :icon="['fas', 'star']"/></button>
         <div class="item-name"><div class="rarity">{{returnRarityString(ERC1155.rarityScoreModifier)}} </div> <div class="name">{{ERC1155.name}}<br> Traded: {{returnLiquidityForItem(ERC1155.name)}} time(s) <span v-if="isWearable!==3"><br>Total Quantity: {{ERC1155.maxQuantity}}</span></div></div>
       </button>
    </div>
      <chart  v-bind:chartData="chartData" v-bind:options="options" class="chart"/>
-     <div class="links-wrapper">
+     <div class="links-wrapper" v-if="isRegistered">
       <a class="link" :href='`https://aavegotchi.com/baazaar/erc1155/${listing.id}`' v-for="listing in ERC1155ListingsFiltered" :key="listing.id" target="_blank">
       {{(toEther(listing.priceInWei))}} GHST, ${{(toEther(listing.priceInWei)*currentPrice).toFixed(2)}}, {{listing.quantity}}Item(s) <br>
      </a>
      </div>
+      <div v-else-if="isRegistered===false" class="placeholder">
+     <div class="container3">
+     <font-awesome-icon  class="lock" :icon="['fas', 'lock']"/>
+     <div class="message">Sorry, you do not have enough rights to view listings.</div>
+     </div>
+    </div>
+    <div v-else class="placeholder">
+     <div class="container2">
+     <font-awesome-icon  class="lock" :icon="['fas', 'lock']"/>
+     <div class="message">Please login with your Metamask account to view listings</div>
+     <button class="MetamaskLogin" v-on:click="checkLogin">Login with Metamask</button>
+     </div>
+   </div>
     </div>
 </template>
 
@@ -58,7 +71,8 @@ export default {
       ERC1155Listings: 'ERC1155Listings',
       errors: 'errors',
       GHSTprices: 'GHSTprices',
-      currentPrice: 'CurrentGHSTprice'
+      currentPrice: 'CurrentGHSTprice',
+      isRegistered: 'user'
     })
   },
   mounted () {
@@ -93,10 +107,26 @@ export default {
     }
   },
   created () {
-    this.getERC1155List()
-    this.updateGraph()
+    this.getERC1155List().then(() => {
+      this.updateGraphAndListings()
+    })
+  },
+  watch: {
+    isRegistered: function (val) {
+      if (val) {
+        this.getERC1155Listings()
+          .then(() => {
+            if (this.currentListingSelected !== -1) {
+              this.filterListings(this.currentListingSelected)
+            }
+          })
+      }
+    }
   },
   methods: {
+    checkLogin () {
+      this.$store.dispatch('fetchIsRegistered')
+    },
     keyUp (event) {
       if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
         this.arrowKeyPressed = false
@@ -107,7 +137,7 @@ export default {
         const currentIndex = this.ERC1155List.findIndex((a) => a.id === this.currentListingSelected)
         if (this.ERC1155List[currentIndex - 1] !== undefined) {
           this.arrowKeyPressed = true
-          this.filterGraph(this.ERC1155List[currentIndex - 1].id)
+          this.filterAll(this.ERC1155List[currentIndex - 1].id)
           const element = document.getElementById(`${this.ERC1155List[currentIndex - 1].id}`)
           if (element !== null) {
             const top = element.offsetTop - this.wrapperHeight
@@ -122,7 +152,8 @@ export default {
         const currentIndex = this.ERC1155List.findIndex((a) => a.id === this.currentListingSelected)
         if (this.ERC1155List[currentIndex + 1] !== undefined) {
           this.arrowKeyPressed = true
-          this.filterGraph(this.ERC1155List[currentIndex + 1].id)
+          this.filterAll(this.ERC1155List[currentIndex + 1].id)
+          // this.filterGraph(this.ERC1155List[currentIndex + 1].id)
           const element = document.getElementById(`${this.ERC1155List[currentIndex + 1].id}`)
           if (element !== null) {
             const top = element.offsetTop - this.wrapperHeight
@@ -179,7 +210,7 @@ export default {
       return `${liquidityItem ? liquidityItem.liquidityValue : 0}`
     },
     async getERC1155Listings () {
-      await this.$store.dispatch('fetchERC1155Listing', this.isWearable).then(() => {
+      return this.$store.dispatch('fetchERC1155Listing', this.isWearable).then(() => {
         console.log(`Listing length: ${this.ERC1155Listings.length}`)
         this.ERC1155ListingsFiltered = this.ERC1155Listings.sort((a, b) => {
           if (ethers.BigNumber.from(a.priceInWei).lt(b.priceInWei)) {
@@ -257,18 +288,25 @@ export default {
       }
     },
     filterGraph (id) {
-      if (id !== -1) {
-        this.minDate = this.maxDate
-        this.currentListingSelected = id
-        this.priceForERC1155Filtered = this.priceForERC1155.filter((x) => x.id === id)
-        for (var i = 0; i < this.priceForERC1155Filtered.length; i++) {
-          var time = parseInt(((this.priceForERC1155Filtered[i].x).getTime() / 1000).toFixed(0))
-          if (time < this.minDate) {
-            this.minDate = toDateTime(time - 20000)
-          }
+      this.minDate = this.maxDate
+      this.currentListingSelected = id
+      this.priceForERC1155Filtered = this.priceForERC1155.filter((x) => x.id === id)
+      for (var i = 0; i < this.priceForERC1155Filtered.length; i++) {
+        var time = parseInt(((this.priceForERC1155Filtered[i].x).getTime() / 1000).toFixed(0))
+        if (time < this.minDate) {
+          this.minDate = toDateTime(time - 20000)
         }
+      }
+    },
+    filterListings (id) {
+      this.ERC1155ListingsFiltered = this.ERC1155Listings.filter((x) => x.erc1155TypeId === id)
+    },
+    filterAll (id) {
+      if (id !== -1) {
+        this.currentListingSelected = id
+        this.filterGraph(id)
+        this.filterListings(id)
         this.updateGraphComponent(`${this.ERC1155List.find((obj) => obj.id === id).name}`)
-        this.ERC1155ListingsFiltered = this.ERC1155Listings.filter((x) => x.erc1155TypeId === id)
       }
     },
     getLiquidities () {
@@ -280,9 +318,29 @@ export default {
         this.liquidity.push({ name: this.ERC1155List[i].name, liquidityValue: itemLiquidityValue })
       }
     },
-    async updateGraph () {
+    async updateGraphAndListings () {
       this.$Progress.start()
-      await this.getERC1155Listings()
+      await this.updateGraph()
+      if (this.isRegistered) {
+        await this.getERC1155Listings()
+      }
+      if (this.currentListingSelected < 0) {
+        let graphName = ''
+        if (this.isWearable === 0) {
+          graphName = 'Wearable Prices'
+        } else if (this.isWearable === 2) {
+          graphName = 'Consumable Prices'
+        } else {
+          graphName = 'Ticket Prices'
+        }
+        this.priceForERC1155Filtered = this.priceForERC1155
+        this.updateGraphComponent(graphName)
+      } else {
+        this.filterAll(this.currentListingSelected)
+      }
+      this.$Progress.finish()
+    },
+    async updateGraph () {
       if (this.GHSTprices.length === 0) {
         await this.$store.dispatch('fetchGHSTPrices')
           .then(() => {
@@ -299,7 +357,7 @@ export default {
         .catch((err) => {
           console.log(err)
         })
-      await this.$store.dispatch('fetchERC1155Graph', this.isWearable)
+      return this.$store.dispatch('fetchERC1155Graph', this.isWearable)
         .then(() => {
           for (var i = 0; i < this.ERC1155Graph.length; i++) {
             const day = Math.floor(this.ERC1155Graph[i].timeLastPurchased / 86400) * 86400
@@ -310,7 +368,7 @@ export default {
               this.maxPrice = this.priceForERC1155[i].y
             }
           }
-          let graphName = ''
+          /* let graphName = ''
           if (this.currentListingSelected < 0) {
             if (this.isWearable === 0) {
               graphName = 'Wearable Prices'
@@ -321,14 +379,14 @@ export default {
             }
             this.priceForERC1155Filtered = this.priceForERC1155
             this.updateGraphComponent(graphName)
-          } else {
-            this.filterGraph(this.currentListingSelected)
-          }
+          } */
+          // } else {
+          // this.filterAll(this.currentListingSelected)
+          //  }
           this.getLiquidities()
           this.sortERC1155List()
-          this.$Progress.finish()
-        }).catch(() => {
-          this.$Progress.finish()
+        }).catch((err) => {
+          console.log(err)
         })
     },
     switchYAxis () {
