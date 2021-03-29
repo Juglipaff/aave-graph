@@ -9,22 +9,22 @@ window.ethereum.on('chainChanged', (_chainId) => {
   window.location.reload()
 })
 
-let currentAccount = ''
+const currentAccount = ''
 window.ethereum.on('accountsChanged', (accounts) => {
   if (accounts.length === 0) {
-    console.log('Please connect to MetaMask.')
+    store.dispatch('setIsRegisteredFalse')
   } else if (accounts[0] !== currentAccount) {
     store.dispatch('fetchIsRegistered')
   }
 })
 
 async function login () {
-  await window.ethereum.enable()
+  await window.ethereum.request({ method: 'eth_requestAccounts' })
     .then((accounts) => {
-      currentAccount = accounts[0]
+      currentAccount[0] = accounts
     })
     .catch((err) => {
-      console.error(err)
+      console.log(err)
     })
   const provider = new ethers.providers.Web3Provider(window.ethereum)
   const contractAddress = '0xb17fC75fc6e054EdA65c32B5a0c26187Dd62955f'
@@ -424,7 +424,11 @@ const store = new Vuex.Store({
       }).catch(error => {
         commit('SET_ERRORS', error)
       })
+    },
+    setIsRegisteredFalse ({ commit }) {
+      commit('SET_USER_DATA', null)
     }
+
   }
 })
 export default store
