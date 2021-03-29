@@ -40,6 +40,8 @@ position: absolute;
 right:100px;
 }
 #app {
+  height:100vh;
+  background-color:rgb(255, 255, 255);
   overflow: hidden;
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -82,6 +84,7 @@ border-bottom: 1px solid white
  top:calc(50% - 90px);
 }
 .MetamaskLogin{
+  transition:0.15s;
   position:relative;
   width:180px;
   height:60px;
@@ -89,12 +92,66 @@ border-bottom: 1px solid white
   color:white;
   font-size:17px;
   background-color:#0088cc;
-  border-radius: 15px;
+  border-radius: 7px;
   border: 0px;
+  outline:0;
+}
+.MetamaskLogin:active{
+  background-color:#006fa7;
+}
+.links-wrapper{
+  padding-top:30px;
+  padding-bottom:30px;
+  position:absolute;
+ margin:0px;
+  top:80px;
+  height:calc(100vh - 140px);
+  overflow-y:scroll;
+   width:320px;
+  right:0;
+  color:white;
+
+   background: rgb(41, 41, 41);
+}
+.links-wrapper::-webkit-scrollbar {
+  width: 10px;
+}
+
+.links-wrapper::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+.links-wrapper::-webkit-scrollbar-thumb {
+  background-color: darkgrey;
+
+}
+.externalLink{
+  z-index:0;
+  margin-top:6px;
+  position: absolute;
+  right:21px;
+}
+.link-text{
+  margin-left:-60px;
+}
+.link{
+  padding-top:10px;
+  height:40px;
+  display: inline-block;
+  color:white;
+  text-decoration: none;
+  width:calc(100% - 88px);
+  text-align:left;
+  margin-left:88px;
+  border-bottom: 1px dashed rgb(175, 175, 175);
+  line-height: 2;
+}
+.links-wrapper a:visited{
+  color:rgb(175, 175, 175);
 }
 .container2{
  position: relative;
- top:calc(50% - 110px);
+ top:calc(50% - 120px);
 }
 .message{
    color:white;
@@ -112,10 +169,9 @@ border-bottom: 1px solid white
   position:absolute;
   top:80px;
   right:0;
-  margin-left:10px;
   height:calc(100vh - 80px);
-  width:290px;
-  background: rgba(32, 32, 32, 1);
+  width:320px;
+  background: rgb(41, 41, 41);
   box-shadow: 0 0px 32px 0 rgba( 31, 38, 135, 0.07 );
   border-radius: 0px;
 }

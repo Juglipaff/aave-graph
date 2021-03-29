@@ -10,8 +10,8 @@
       <button class="switch_axis" v-on:click="switchYAxis()"> <div v-if="currentAxis">$</div><div v-else>GHST</div> </button>
     <chart v-bind:chartData="chartData" v-bind:options="options" id="chart"/>
       <div v-if="isRegistered" class="links-wrapper">
-    <a v-for="listing in closedPortalListings" :key="listing.link" target="_blank" :href="`https://aavegotchi.com/baazaar/erc721/${listing.id}`">
-    {{fromWei(listing.priceInWei)}} GHST, ${{parseInt(fromWei(listing.priceInWei)*currentPrice)}}<br>
+    <a v-for="listing in closedPortalListings" class="link" :key="listing.link" target="_blank" :href="`https://aavegotchi.com/baazaar/erc721/${listing.id}`">
+    <span class="link-text"> {{fromWei(listing.priceInWei)}} GHST, ${{parseInt(fromWei(listing.priceInWei)*currentPrice)}} <font-awesome-icon class="externalLink" :icon="['fas', 'external-link-alt']"/></span><br>
     </a>
    </div>
    <div v-else-if="isRegistered===false" class="placeholder">
@@ -312,17 +312,6 @@ export default {
 </script>
 <style scoped>
 
-.links-wrapper{
- margin-top:25px;
- margin-right:0;
-  margin-left:0;
-  height:calc(100vh - 230px);
-  overflow-y:scroll;
-   width:290px;
-   padding-left:5px;
-   float:left;
-   left:0px;
-}
 .switch_axis{
   position:absolute;
   left:0;
@@ -334,7 +323,7 @@ export default {
   float:left;
   margin-top:30px;
   margin-left:20px;
-  width:calc(100vw - 340px);
+  width:calc(100vw - 350px);
   height:calc(100vh - 205px);
 }
 

@@ -27,7 +27,7 @@
      <chart  v-bind:chartData="chartData" v-bind:options="options" class="chart"/>
      <div class="links-wrapper" v-if="isRegistered">
       <a class="link" :href='`https://aavegotchi.com/baazaar/erc1155/${listing.id}`' v-for="listing in ERC1155ListingsFiltered" :key="listing.id" target="_blank">
-      {{(toEther(listing.priceInWei))}} GHST, ${{(toEther(listing.priceInWei)*currentPrice).toFixed(2)}}, {{listing.quantity}}Item(s) <br>
+      <span class="link-text">{{(toEther(listing.priceInWei))}} GHST, ${{(toEther(listing.priceInWei)*currentPrice).toFixed(2)}} {{'\u00A0'+listing.quantity}}Item(s) <font-awesome-icon class="externalLink" :icon="['fas', 'external-link-alt']"/></span><br>
      </a>
      </div>
       <div v-else-if="isRegistered===false" class="placeholder">
@@ -633,11 +633,7 @@ margin-bottom:2px;
       background-color:rgb(233, 255, 232) !important;
        color:rgb(48, 185, 44)
 }
-.link{
-  margin-right:0;
-  margin-left:0;
-  padding:0;
-  }
+
 .sort-button{
   left:20px;
   margin-top:0px;
@@ -649,20 +645,8 @@ margin-bottom:2px;
     font-size:16px;
 }
 
-.links-wrapper{
- margin-top:25px;
- margin-right:0;
-  margin-left:0;
-  height:calc(100vh - 260px);
-  overflow-y:scroll;
-   width:290px;
-   padding-left:5px;
-   float:left;
-   left:0px;
-}
-
 .chart{
-   width:calc(100vw - 600px);
+   width:calc(100vw - 610px);
     height:calc(100vh - 205px);
    left:0px;
    float:left;
@@ -705,10 +689,6 @@ background-color:#e0e0e0
 .plate:focus{
    outline: none !important;
    border:2px solid #0088cc;
-}
-
-a{
-   color: #0088cc;
 }
 
 </style>

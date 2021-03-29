@@ -9,19 +9,25 @@ window.ethereum.on('chainChanged', (_chainId) => {
   window.location.reload()
 })
 
-const currentAccount = ''
+let currentAccount = ''
 window.ethereum.on('accountsChanged', (accounts) => {
   if (accounts.length === 0) {
     store.dispatch('setIsRegisteredFalse')
+      .catch((err) => {
+        console.log(err)
+      })
   } else if (accounts[0] !== currentAccount) {
     store.dispatch('fetchIsRegistered')
+      .catch((err) => {
+        console.log(err)
+      })
   }
 })
 
 async function login () {
   await window.ethereum.request({ method: 'eth_requestAccounts' })
     .then((accounts) => {
-      currentAccount[0] = accounts
+      currentAccount = accounts[0]
     })
     .catch((err) => {
       console.log(err)
@@ -30,8 +36,13 @@ async function login () {
   const contractAddress = '0xb17fC75fc6e054EdA65c32B5a0c26187Dd62955f'
   const contract = new ethers.Contract(contractAddress, abi, provider)
   const signer = provider.getSigner()
-  const currentAddress = await signer.getAddress()
+  const currentAddress = await signer.getAddress().catch((err) => {
+    console.log(err)
+  })
   const isRegistered = await contract.registeredAddresses(currentAddress)
+    .catch((err) => {
+      console.log(err)
+    })
   console.log(isRegistered)
   return isRegistered
 }
@@ -343,7 +354,7 @@ const store = new Vuex.Store({
       state.errors = []
     },
     SET_ERRORS (state, errorData) {
-      state.errors = errorData
+      state.errors = []
     }
   },
   actions: {
