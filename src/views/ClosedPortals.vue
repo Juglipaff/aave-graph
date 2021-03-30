@@ -8,25 +8,15 @@
       </div>
     </div>
       <button class="switch_axis" v-on:click="switchYAxis()"> <div v-if="currentAxis">$</div><div v-else>GHST</div> </button>
-    <chart v-bind:chartData="chartData" v-bind:options="options" id="chart"/>
+
+    <chart v-bind:chartData="chartData" v-bind:options="options" :class="[isRegistered ? 'chart' : 'chart-login']"/>
+
       <div v-if="isRegistered" class="links-wrapper">
     <a v-for="listing in closedPortalListings" class="link" :key="listing.link" target="_blank" :href="`https://aavegotchi.com/baazaar/erc721/${listing.id}`">
     <span class="link-text"> {{fromWei(listing.priceInWei)}} GHST, ${{parseInt(fromWei(listing.priceInWei)*currentPrice)}} <font-awesome-icon class="externalLink" :icon="['fas', 'external-link-alt']"/></span><br>
     </a>
    </div>
-   <div v-else-if="isRegistered===false" class="placeholder">
-     <div class="container3">
-     <font-awesome-icon  class="lock" :icon="['fas', 'lock']"/>
-     <div class="message">Sorry, you do not have enough rights to view listings.</div>
-     </div>
-   </div>
-   <div v-else class="placeholder">
-     <div class="container2">
-     <font-awesome-icon  class="lock" :icon="['fas', 'lock']"/>
-     <div class="message">Please login with your Metamask account to view listings</div>
-     <button class="MetamaskLogin" v-on:click="checkLogin">Login with Metamask</button>
-     </div>
-   </div>
+
   </div>
 </template>
 <script>
@@ -221,10 +211,10 @@ export default {
               }
             ]
           },
-
           legend: {
             display: true
           },
+          responsive: true,
           elements: {
             point: {
               radius: 2
@@ -260,7 +250,6 @@ export default {
             intersect: false,
             animationDuration: 0
           },
-          responsive: true,
           responsiveAnimationDuration: 0,
           maintainAspectRatio: false,
           plugins: {
@@ -311,15 +300,21 @@ export default {
 }
 </script>
 <style scoped>
-
+.chart-login{
+  position: relative;
+  float:left;
+  margin-left:20px;
+  width:calc(100vw - 70px);
+}
 .switch_axis{
   position:absolute;
   left:0;
-    width:70px;
+  width:70px;
   height:25px;
   margin-left:30px;
 }
-#chart{
+.chart{
+  position: relative;
   float:left;
   margin-top:30px;
   margin-left:20px;

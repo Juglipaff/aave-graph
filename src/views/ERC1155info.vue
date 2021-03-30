@@ -24,25 +24,12 @@
         <div class="item-name"><div class="rarity">{{returnRarityString(ERC1155.rarityScoreModifier)}} </div> <div class="name">{{ERC1155.name}}<br> Traded: {{returnLiquidityForItem(ERC1155.name)}} time(s) <span v-if="isWearable!==3"><br>Total Quantity: {{ERC1155.maxQuantity}}</span></div></div>
       </button>
    </div>
-     <chart  v-bind:chartData="chartData" v-bind:options="options" class="chart"/>
+     <chart  v-bind:chartData="chartData" v-bind:options="options" :class="[isRegistered ? 'chart' : 'chart-login']"/>
      <div class="links-wrapper" v-if="isRegistered">
       <a class="link" :href='`https://aavegotchi.com/baazaar/erc1155/${listing.id}`' v-for="listing in ERC1155ListingsFiltered" :key="listing.id" target="_blank">
       <span class="link-text">{{(toEther(listing.priceInWei))}} GHST, ${{(toEther(listing.priceInWei)*currentPrice).toFixed(2)}} {{'\u00A0'+listing.quantity}}Item(s) <font-awesome-icon class="externalLink" :icon="['fas', 'external-link-alt']"/></span><br>
      </a>
      </div>
-      <div v-else-if="isRegistered===false" class="placeholder">
-     <div class="container3">
-     <font-awesome-icon  class="lock" :icon="['fas', 'lock']"/>
-     <div class="message">Sorry, you do not have enough rights to view listings.</div>
-     </div>
-    </div>
-    <div v-else class="placeholder">
-     <div class="container2">
-     <font-awesome-icon  class="lock" :icon="['fas', 'lock']"/>
-     <div class="message">Please login with your Metamask account to view listings</div>
-     <button class="MetamaskLogin" v-on:click="checkLogin">Login with Metamask</button>
-     </div>
-   </div>
     </div>
 </template>
 
@@ -561,6 +548,14 @@ export default {
 </script>
 
 <style scoped>
+.chart-login{
+   width:calc(100vw - 330px);
+    height:calc(100vh - 205px);
+   left:0px;
+   float:left;
+   top:0;
+   position: relative;
+}
 .update{
   font-size:17px;
   height:30px;

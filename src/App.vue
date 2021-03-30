@@ -7,7 +7,8 @@
       <router-link to="/wearables">Wearables</router-link>
       <router-link to="/consumables">Consumables</router-link>
       <router-link to="/tickets">Tickets</router-link>
-      <span id="priceGHST"> GHST price: <span id="price-display">{{currentPrice}}$ </span></span>
+      <img src=".\assets\metamask.png" v-if="isRegistered!==true&&isRegistered!==false" class="MetamaskLogin" v-on:click="checkLogin"/>
+      <span :class="[isRegistered!==null ? 'priceGHSTnotLog':'priceGHST']"> GHST price: <span id="price-display">{{currentPrice}}$ </span></span>
     </div>
     <vue-progress-bar></vue-progress-bar>
     <router-view :key="$route.fullPath"/>
@@ -16,12 +17,19 @@
 
 <script>
 import { mapState } from 'vuex'
-
+import store from './store/index.js'
 export default {
+  store,
   computed: {
     ...mapState({
-      currentPrice: 'CurrentGHSTprice'
+      currentPrice: 'CurrentGHSTprice',
+      isRegistered: 'user'
     })
+  },
+  methods: {
+    checkLogin () {
+      this.$store.dispatch('fetchIsRegistered')
+    }
   }
 }
 </script>
@@ -34,7 +42,12 @@ export default {
 #price-display{
   color: rgb(255, 255, 255);
 }
-#priceGHST{
+.priceGHST{
+   color: rgb(173, 218, 255);
+position: absolute;
+right:140px;
+}
+.priceGHSTnotLog{
   color: rgb(173, 218, 255);
 position: absolute;
 right:100px;
@@ -79,26 +92,15 @@ border-bottom: 1px solid white
 #chart{
   width:98%
 }
-.container3{
- position: relative;
- top:calc(50% - 90px);
-}
+
 .MetamaskLogin{
-  transition:0.15s;
-  position:relative;
-  width:180px;
-  height:60px;
-  top:-40px;
-  color:white;
-  font-size:17px;
-  background-color:#0088cc;
-  border-radius: 7px;
-  border: 0px;
-  outline:0;
+  position:fixed;
+  width:30px;
+  right:0px;
+  top:24px;
+  margin:0;
 }
-.MetamaskLogin:active{
-  background-color:#006fa7;
-}
+
 .links-wrapper{
   padding-top:30px;
   padding-bottom:30px;
@@ -110,7 +112,6 @@ border-bottom: 1px solid white
    width:320px;
   right:0;
   color:white;
-
    background: rgb(41, 41, 41);
 }
 .links-wrapper::-webkit-scrollbar {
@@ -149,30 +150,5 @@ border-bottom: 1px solid white
 .links-wrapper a:visited{
   color:rgb(175, 175, 175);
 }
-.container2{
- position: relative;
- top:calc(50% - 120px);
-}
-.message{
-   color:white;
-  top:-20px;
-  margin:40px;
-  font-size:20px;
-  position: relative;
-}
-.lock{
-   color:white;
-  position: relative;
-  font-size:70px;
-}
-.placeholder{
-  position:absolute;
-  top:80px;
-  right:0;
-  height:calc(100vh - 80px);
-  width:320px;
-  background: rgb(41, 41, 41);
-  box-shadow: 0 0px 32px 0 rgba( 31, 38, 135, 0.07 );
-  border-radius: 0px;
-}
+
 </style>
