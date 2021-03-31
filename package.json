@@ -16,6 +16,7 @@
     "chartjs-plugin-downsample": "^1.1.0",
     "chartjs-plugin-zoom": "^0.7.7",
     "core-js": "^3.6.5",
+    "patch-package": "^6.4.7",
     "vue": "^2.6.11",
     "vue-chartjs": "^3.5.1",
     "vue-progressbar": "^0.7.5",

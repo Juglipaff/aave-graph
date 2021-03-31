@@ -7,8 +7,8 @@
       <router-link to="/wearables">Wearables</router-link>
       <router-link to="/consumables">Consumables</router-link>
       <router-link to="/tickets">Tickets</router-link>
-      <img src="./assets/metamask.png" v-if="isRegistered!==true&&isRegistered!==false" class="MetamaskLogin" v-on:click="checkLogin"/>
-      <span :class="[isRegistered!==null ? 'priceGHSTnotLog':'priceGHST']"> GHST price: <span id="price-display">{{currentPrice}}$ </span></span>
+      <div v-if="isRegistered!==true&&isRegistered!==false" class="MetamaskLogin" v-on:click="checkLogin"/>
+      <span class='priceGHST'> GHST price: <span id="price-display">{{currentPrice}}$ </span></span>
     </div>
     <vue-progress-bar></vue-progress-bar>
     <router-view :key="$route.fullPath"/>
@@ -45,13 +45,9 @@ export default {
 .priceGHST{
    color: rgb(173, 218, 255);
 position: absolute;
-right:140px;
-}
-.priceGHSTnotLog{
-  color: rgb(173, 218, 255);
-position: absolute;
 right:100px;
 }
+
 #app {
   height:100vh;
   background-color:rgb(255, 255, 255);
@@ -96,9 +92,11 @@ border-bottom: 1px solid white
 .MetamaskLogin{
   position:fixed;
   width:30px;
-  right:0px;
-  top:24px;
+  right:-25px;
+  top:0px;
+  height:80px;
   margin:0;
+
 }
 
 .links-wrapper{

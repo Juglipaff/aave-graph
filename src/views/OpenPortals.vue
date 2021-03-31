@@ -184,14 +184,15 @@ export default {
                   afterUpdate: (chartObj) => {
                     var tickArray = []
                     var valuesArray = []
-                    var tick = parseInt(this.maxPrice)
-                    for (var i = 0; tick !== 0.25; i++) {
-                      tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
-                      valuesArray.push(tick)
-                      tick = (tick < 2) ? tick * 0.5 : parseInt(tick * 0.5)
+                    var max = chartObj.max
+                    var min = chartObj.min
+                    var tick = min
+                    var delta = Math.pow(max / min, 0.1)
+                    for (var i = 0; i < 11; i++) {
+                      tickArray.push({ label: this.currentAxis ? `$${parseFloat(tick.toFixed(2))}` : `${parseFloat(tick.toFixed(1))}GHST`, major: false, value: parseFloat(tick.toFixed(1)), _index: i })
+                      valuesArray.push(parseFloat(tick.toFixed(1)))
+                      tick = tick * delta
                     }
-                    tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
-                    valuesArray.push(tick)
                     chartObj.tickValues = valuesArray
                     chartObj._ticks = tickArray
                     chartObj.width = 100

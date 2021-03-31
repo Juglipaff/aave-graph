@@ -177,12 +177,16 @@ export default {
                   afterUpdate: (chartObj) => {
                     var tickArray = []
                     var valuesArray = []
-                    var tick = parseInt(this.maxPrice)
-                    for (var i = 0; tick !== 0.25; i++) {
-                      tickArray.push({ label: this.currentAxis ? `$${tick}` : `${tick}GHST`, major: false, value: tick, _index: i })
-                      valuesArray.push(tick)
-                      tick = (tick < 2) ? tick * 0.5 : parseInt(tick * 0.5)
+                    var max = chartObj.max
+                    var min = chartObj.min
+                    var tick = min
+                    var delta = Math.pow(max / min, 0.1)
+                    for (var i = 0; i < 11; i++) {
+                      tickArray.push({ label: this.currentAxis ? `$${parseFloat(tick.toFixed(2))}` : `${parseFloat(tick.toFixed(1))}GHST`, major: false, value: parseFloat(tick.toFixed(1)), _index: i })
+                      valuesArray.push(parseFloat(tick.toFixed(1)))
+                      tick = tick * delta
                     }
+
                     chartObj.tickValues = valuesArray
                     chartObj._ticks = tickArray
                     chartObj.width = 100
@@ -271,6 +275,21 @@ export default {
                   rangeMin: {
                     x: this.minDate
                   }
+                /*  onPanComplete: (chart) => {
+                    let maxValue = 0
+                    let minValue = 9007199254740990
+                    const obj = chart.chart.visiblePoints
+                    for (var i = obj[0]; i < obj[obj.length - 1]; i++) {
+                      const point = parseFloat(chart.chart.data.datasets[0].data[i].y)
+                      if (point > maxValue) {
+                        maxValue = point
+                      }
+                      if (point < minValue) {
+                        minValue = point
+                      }
+                    }
+                    chart.chart.setZoom(minValue * 0.8, maxValue * 1.2)
+                  } */
                 },
                 zoom: {
                   enabled: true,
@@ -281,6 +300,22 @@ export default {
                   rangeMin: {
                     x: this.minDate
                   }
+                  /* onZoomComplete: (chart) => {
+                    let maxValue = 0
+                    let minValue = 9007199254740990
+                    console.log(chart.chart.data.datasets)
+                    const obj = chart.chart.visiblePoints
+                    for (var i = obj[0]; i < obj[obj.length - 1]; i++) {
+                      const point = parseFloat(chart.chart.data.datasets[0].data[i].y)
+                      if (point > maxValue) {
+                        maxValue = point
+                      }
+                      if (point < minValue) {
+                        minValue = point
+                      }
+                    }
+                    chart.chart.setZoom(minValue * 0.8, maxValue * 1.2)
+                  } */
                 }
               }
             },

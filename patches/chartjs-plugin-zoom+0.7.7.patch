@@ -1,0 +1,127 @@
+diff --git a/node_modules/chartjs-plugin-zoom/chartjs-plugin-zoom.js b/node_modules/chartjs-plugin-zoom/chartjs-plugin-zoom.js
+index b51d341..d56354d 100644
+--- a/node_modules/chartjs-plugin-zoom/chartjs-plugin-zoom.js
++++ b/node_modules/chartjs-plugin-zoom/chartjs-plugin-zoom.js
+@@ -443,6 +443,28 @@ var zoomPlugin = {
+ 
+ 			chartInstance.update();
+ 		};
++		// NEW CODE START FOR PROGRAMATIC ZOOM
++	chartInstance.setZoom = function(min, max) {
++		helpers.each(chartInstance.scales, function(scale, id) {
++			if (id == "left-y-axis") {
++				var tickOptions = scale.options.ticks;
++				if (tickOptions) {
++					console.log(scale)
++					scale.options.ticks.min = rangeMinLimiter(scale.options, min);
++					scale.options.ticks.max = rangeMaxLimiter(scale.options, max);
++				}
++	
++				scale.options = helpers.configMerge(scale.options, scale.originalOptions);
++			}
++		});
++	
++		helpers.each(chartInstance.data.datasets, function(dataset, id) {
++			dataset._meta = null;
++		});
++	
++		chartInstance.update();
++	}
++	// NEW CODE END FOR PROGRAMATIC ZOOM
+ 
+ 	},
+ 
+@@ -663,7 +685,6 @@ var zoomPlugin = {
+ 
+ 	beforeDatasetsDraw: function(chartInstance) {
+ 		var ctx = chartInstance.ctx;
+-
+ 		if (chartInstance.$zoom._dragZoomEnd) {
+ 			var xAxis = getXAxis(chartInstance);
+ 			var yAxis = getYAxis(chartInstance);
+diff --git a/node_modules/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.js b/node_modules/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.js
+index b51d341..e5395f1 100644
+--- a/node_modules/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.js
++++ b/node_modules/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.js
+@@ -255,7 +255,6 @@ function doZoom(chart, percentZoomX, percentZoomY, focalPoint, whichAxes, animat
+ 		} else {
+ 			chart.update(0);
+ 		}
+-
+ 		if (typeof zoomOptions.onZoom === 'function') {
+ 			zoomOptions.onZoom({chart: chart});
+ 		}
+@@ -443,6 +442,25 @@ var zoomPlugin = {
+ 
+ 			chartInstance.update();
+ 		};
++		// NEW CODE START FOR PROGRAMATIC ZOOM
++	chartInstance.setZoom = function(min, max) {
++		helpers.each(chartInstance.scales, function(scale, id) {
++			if (id == "left-y-axis") {
++				var tickOptions = scale.options.ticks;
++				if (tickOptions) {
++					scale.options.ticks.min = rangeMinLimiter(scale.options, min);
++					scale.options.ticks.max = rangeMaxLimiter(scale.options, max);
++				}
++				scale.options = helpers.configMerge(scale.options, scale.originalOptions);
++			}
++		});
++	
++		helpers.each(chartInstance.data.datasets, function(dataset, id) {
++			dataset._meta = null;
++		});
++		chartInstance.update();
++	}
++	// NEW CODE END FOR PROGRAMATIC ZOOM
+ 
+ 	},
+ 
+@@ -511,7 +529,6 @@ var zoomPlugin = {
+ 			var chartDistanceY = chartArea.bottom - chartArea.top;
+ 			var yEnabled = directionEnabled(zoomOptions.mode, 'y', chartInstance);
+ 			var zoomY = yEnabled && dragDistanceY ? 1 + ((chartDistanceY - dragDistanceY) / chartDistanceY) : 1;
+-
+ 			doZoom(chartInstance, zoomX, zoomY, {
+ 				x: (startX - chartArea.left) / (1 - dragDistanceX / chartDistanceX) + chartArea.left,
+ 				y: (startY - chartArea.top) / (1 - dragDistanceY / chartDistanceY) + chartArea.top
+@@ -663,7 +680,6 @@ var zoomPlugin = {
+ 
+ 	beforeDatasetsDraw: function(chartInstance) {
+ 		var ctx = chartInstance.ctx;
+-
+ 		if (chartInstance.$zoom._dragZoomEnd) {
+ 			var xAxis = getXAxis(chartInstance);
+ 			var yAxis = getYAxis(chartInstance);
+diff --git a/node_modules/chartjs-plugin-zoom/src/plugin.js b/node_modules/chartjs-plugin-zoom/src/plugin.js
+index 0921595..89a21a5 100644
+--- a/node_modules/chartjs-plugin-zoom/src/plugin.js
++++ b/node_modules/chartjs-plugin-zoom/src/plugin.js
+@@ -429,6 +429,27 @@ var zoomPlugin = {
+ 
+ 			chartInstance.update();
+ 		};
++		// NEW CODE START FOR PROGRAMATIC ZOOM
++	chartInstance.setZoom = function(min, max) {
++		helpers.each(chartInstance.scales, function(scale, id) {
++			if (id == "left-y-axis") {
++				var tickOptions = scale.options.ticks;
++				if (tickOptions) {
++					scale.options.ticks.min = rangeMinLimiter(scale.options, min);
++					scale.options.ticks.max = rangeMaxLimiter(scale.options, max);
++				}
++	
++				scale.options = helpers.configMerge(scale.options, scale.originalOptions);
++			}
++		});
++	
++		helpers.each(chartInstance.data.datasets, function(dataset, id) {
++			dataset._meta = null;
++		});
++	
++		chartInstance.update();
++	}
++	// NEW CODE END FOR PROGRAMATIC ZOOM
+ 
+ 	},
+ 

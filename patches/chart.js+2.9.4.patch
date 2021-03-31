@@ -1,0 +1,89 @@
+diff --git a/node_modules/chart.js/dist/Chart.js b/node_modules/chart.js/dist/Chart.js
+index e9c53c3..57761b5 100644
+--- a/node_modules/chart.js/dist/Chart.js
++++ b/node_modules/chart.js/dist/Chart.js
+@@ -2789,7 +2789,6 @@ var exports$1 = {
+ 	drawPoint: function(ctx, style, radius, x, y, rotation) {
+ 		var type, xOffset, yOffset, size, cornerRadius;
+ 		var rad = (rotation || 0) * RAD_PER_DEG;
+-
+ 		if (style && typeof style === 'object') {
+ 			type = style.toString();
+ 			if (type === '[object HTMLImageElement]' || type === '[object HTMLCanvasElement]') {
+@@ -3869,7 +3868,6 @@ helpers$1.extend(DatasetController.prototype, {
+ 		var elements = meta.data || [];
+ 		var ilen = elements.length;
+ 		var i = 0;
+-
+ 		if (meta.dataset) {
+ 			meta.dataset.draw();
+ 		}
+@@ -4509,18 +4507,18 @@ var element_point = core_element.extend({
+ 		var y = vm.y;
+ 		var globalDefaults = core_defaults.global;
+ 		var defaultColor = globalDefaults.defaultColor; // eslint-disable-line no-shadow
+-
+ 		if (vm.skip) {
+ 			return;
+ 		}
+-
+ 		// Clipping for Points.
+ 		if (chartArea === undefined || helpers$1.canvas._isPointInArea(vm, chartArea)) {
+ 			ctx.strokeStyle = vm.borderColor || defaultColor;
+ 			ctx.lineWidth = valueOrDefault$2(vm.borderWidth, globalDefaults.elements.point.borderWidth);
+ 			ctx.fillStyle = vm.backgroundColor || defaultColor;
+ 			helpers$1.canvas.drawPoint(ctx, pointStyle, radius, x, y, rotation);
++			return this._index
+ 		}
++		return null
+ 	}
+ });
+ 
+@@ -6114,9 +6112,14 @@ var controller_line = core_datasetController.extend({
+ 		}
+ 
+ 		// Draw the points
++		this.chart.visiblePoints=[]
+ 		for (; i < ilen; ++i) {
+-			points[i].draw(area);
++			const point = points[i].draw(area)
++			if(point!=null){
++				this.chart.visiblePoints.push(point);
++			}
+ 		}
++
+ 	},
+ 
+ 	/**
+@@ -6374,7 +6377,6 @@ var controller_polarArea = core_datasetController.extend({
+ 				count++;
+ 			}
+ 		});
+-
+ 		return count;
+ 	},
+ 
+@@ -9810,7 +9812,6 @@ helpers$1.extend(Chart.prototype, /** @lends Chart */ {
+ 			// See https://github.com/chartjs/Chart.js/issues/3781
+ 			onComplete(new core_animation({numSteps: 0, chart: me}));
+ 		}
+-
+ 		return me;
+ 	},
+ 
+@@ -9841,7 +9842,6 @@ helpers$1.extend(Chart.prototype, /** @lends Chart */ {
+ 		for (i = 0; i < layers.length && layers[i].z <= 0; ++i) {
+ 			layers[i].draw(me.chartArea);
+ 		}
+-
+ 		me.drawDatasets(easingValue);
+ 
+ 		// Rest of layers
+@@ -12485,7 +12485,6 @@ var Scale = core_element.extend({
+ 		if (!me._isVisible()) {
+ 			return;
+ 		}
+-
+ 		me._drawGrid(chartArea);
+ 		me._drawTitle();
+ 		me._drawLabels();

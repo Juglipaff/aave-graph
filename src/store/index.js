@@ -91,7 +91,7 @@ async function getOpenPortalPricesAndRarity () {
   var dataArray = []
   var length = 1000
   var i = 0
-  while (length === 1000) {
+  while (length === 1000 && i < 6) {
     const graphQuery = `{
     erc721Listings(first:1000,skip:${i * 1000},orderDirection:desc,orderBy:timePurchased,where:{category:2,timePurchased_not:"0"})
     {
@@ -122,7 +122,7 @@ async function getGotchiPricesAndRarity () {
   var dataArray = []
   var length = 1000
   var i = 0
-  while (length === 1000) {
+  while (length === 1000 && i < 6) {
     const graphQuery = `{
     erc721Listings(first:1000,skip:${i * 1000},orderDirection:desc,orderBy:timePurchased,where:{category:3,timePurchased_not:"0"})
     {
@@ -148,7 +148,7 @@ async function getClosedPortalPrices () {
   var dataArray = []
   var length = 1000
   var i = 0
-  while (length === 1000) {
+  while (length === 1000 && i < 6) {
     const graphQuery = `{
     erc721Listings(first:1000,skip:${i * 1000},orderDirection:desc,orderBy:timePurchased,where:{category:0,timePurchased_not:"0"})
     {
@@ -170,7 +170,7 @@ async function getClosedPortalListings () {
   var dataArray = []
   var length = 1000
   var i = 0
-  while (length === 1000) {
+  while (length === 1000 && i < 6) {
     const graphQuery = `{
     erc721Listings(first:1000,skip:${i * 1000},orderBy:timeCreated,orderDirection:desc,where:{category:0,timePurchased:"0",cancelled:false})
     {
@@ -251,7 +251,7 @@ async function getERC1155Prices (isWearable) {
   var dataArray = []
   var length = 1000
   var i = 0
-  while (length === 1000) {
+  while (length === 1000 && i < 6) {
     const graphQuery = `{
     erc1155Listings(first: 1000,skip:${i * 1000}, orderBy:timeLastPurchased,orderDirection: desc,where:{category:"${isWearable}",sold:true}) {
       priceInWei
@@ -273,7 +273,7 @@ async function getERC1155Listings (isWearable) {
   var dataArray = []
   var length = 1000
   var i = 0
-  while (length === 1000) {
+  while (length === 1000 && i < 6) {
     const graphQuery = `{
     erc1155Listings(first: 1000,skip:${i * 1000}, orderBy:timeCreated,orderDirection:desc,where:{category:"${isWearable}", cancelled:false, sold:false}) {
       priceInWei
