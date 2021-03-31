@@ -7,7 +7,7 @@
       <router-link to="/wearables">Wearables</router-link>
       <router-link to="/consumables">Consumables</router-link>
       <router-link to="/tickets">Tickets</router-link>
-      <img src=".\assets\metamask.png" v-if="isRegistered!==true&&isRegistered!==false" class="MetamaskLogin" v-on:click="checkLogin"/>
+      <img src="./assets/metamask.png" v-if="isRegistered!==true&&isRegistered!==false" class="MetamaskLogin" v-on:click="checkLogin"/>
       <span :class="[isRegistered!==null ? 'priceGHSTnotLog':'priceGHST']"> GHST price: <span id="price-display">{{currentPrice}}$ </span></span>
     </div>
     <vue-progress-bar></vue-progress-bar>
