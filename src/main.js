@@ -5,6 +5,7 @@ import store from './store'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import VueProgressBar from 'vue-progressbar'
+import VueGtag from 'vue-gtag'
 import { faStar, faLock, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
 Vue.config.productionTip = false
 library.add(faStar, faLock, faExternalLinkAlt)
@@ -14,7 +15,9 @@ Vue.use(VueProgressBar, {
   failedColor: 'red',
   height: '5px'
 })
-
+Vue.use(VueGtag, {
+  config: { id: 'G-3T9WSLRTJM' }
+})
 new Vue({
   router,
   store,

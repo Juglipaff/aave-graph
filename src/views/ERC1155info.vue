@@ -101,6 +101,7 @@ export default {
   watch: {
     isRegistered: function (val) {
       if (val) {
+        this.$gtag.event('login', { method: 'Google' })
         this.getERC1155Listings()
           .then(() => {
             if (this.currentListingSelected !== -1) {

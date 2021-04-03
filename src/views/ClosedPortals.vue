@@ -65,6 +65,7 @@ export default {
   watch: {
     isRegistered: function (val) {
       if (val) {
+        this.$gtag.event('login', { method: 'Google' })
         this.$store.dispatch('fetchClosedPortalListing')
           .then(() => {
             console.log(`Listing length: ${this.closedPortalListings.length}`)
